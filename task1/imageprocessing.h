@@ -12,6 +12,25 @@ class QLabel;
 class QScrollArea;
 QT_END_NAMESPACE
 
+struct ImgInfo
+{
+	double coeffR;
+	double coeffG;
+	double coeffB;
+	double intensityMin;
+	double intensityMax;
+	ImgInfo (double r, double g, double b);
+};
+
+struct Position
+{
+	int x0;
+	int y0;
+	int x1;
+	int y1;
+};
+
+
 class ImageProcessing : public QMainWindow
 {
 	 Q_OBJECT
@@ -26,11 +45,17 @@ private slots:
 	void linearStretchingR();
 	void linearStretchingG();
 	void linearStretchingB();
+	void filterSmoothing();
+	void filterSharpness();
 
+	void wavesH();
+	void wavesV();
 private:
+	Position pos;
 	void createActions();
 	void createMenus();
-	void linearStretching(int isR, int isG, int isB);
+	void extremumsIntensity(ImgInfo *);
+	void setWorkArea(int, int, int, int);
 
         QLabel *imageLabel;
         QImage *image;
@@ -43,9 +68,18 @@ private:
 	QAction *linearStretchingRAct;
 	QAction *linearStretchingGAct;
 	QAction *linearStretchingBAct;
+	QAction *filterSmoothingAct;
+	QAction *filterSharpnessAct;
+
+	QAction *wavesHAct;
+	QAction *wavesVAct;
 
 	QMenu *fileMenu;
         QMenu *contrastMenu;
+
+	QMenu *effectsMenu;
 };
+
+
 
 #endif // IMAGEPROCESSING_H

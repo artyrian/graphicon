@@ -11,6 +11,8 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        imageprocessing.cpp
+        imageprocessing.cpp \
+    filterdialog.cpp
 
-HEADERS  += imageprocessing.h
+HEADERS  += imageprocessing.h \
+    filterdialog.h
