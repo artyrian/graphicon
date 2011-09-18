@@ -13,7 +13,7 @@ signals:
 private slots:
 
 private:
-
+	int sigma;
 };
 
 #endif // FILTER_DIALOG_H
