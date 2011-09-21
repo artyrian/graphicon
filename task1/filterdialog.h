@@ -2,6 +2,9 @@
 #define FILTER_DIALOG_H
 
 #include <qdialog.h>
+#include <QGroupBox>
+#include <QTableWidget>
+#include <QPushButton>
 
 class FilterDialog : public QDialog
 {
@@ -11,9 +14,12 @@ public:
 signals:
 
 private slots:
+	void createInputForm();
 
 private:
-	int sigma;
+	QGroupBox *inputForm;
+	QTableWidget *matrixTable;
+	QPushButton *okButton;
 };
 
 #endif // FILTER_DIALOG_H

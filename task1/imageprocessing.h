@@ -44,7 +44,7 @@ public:
 	QPoint secondCorner;
 	AreaImage();
 	void setSelectedByMouse(bool);
-	Position points();
+	Position points(int, int);
 protected:
 	QRubberBand *rubberBand;
 	virtual void mousePressEvent(QMouseEvent *);
@@ -68,7 +68,6 @@ private slots:
 	void linearStretchingB();
 	void linearStretchingChannels();
 	void grayWorld();
-	int normalizeColorValue (double color);
 	void filterSmoothingSimple();
 	void filterSmoothing();
 	void filterSharpness();
@@ -79,7 +78,7 @@ private slots:
 	void glassEffect();
 	void selectByMouse();
 	void rotate();
-
+	void scale();
 
 private:
 	double **kernelGauss2D(double, double);
@@ -90,10 +89,12 @@ private:
 	void createActions();
 	void createMenus();
 	void extremumsIntensity(ImgInfo *);
+	int normalizeColorValue (double color);
 	void copyImageBuf(QImage *);
 	QRgb realPixel(int, int);
 	int realX(int);
 	int realY(int);
+	QRgb bilinearInterpolation(double, double);
 
 	AreaImage *imageLabel;
 	QImage *image;
@@ -117,6 +118,7 @@ private:
 	QAction *wavesLongEffectAct;
 	QAction *glassEffectAct;
 	QAction *rotateAct;
+	QAction *scaleAct;
 	QAction *selectByMouseAct;
 
 	QMenu *fileMenu;
