@@ -7,8 +7,8 @@ const double coeffRed = 0.2125;
 const double coeffGreen = 0.7154;
 const double coeffBlue = 0.0721;
 const double pi = 3.1416;
-const int sharpSigma = 1;
-const double sigmaScale  = 1.0;
+const double sharpSigma = 1.0;
+const double sigmaScale  = 0.5;
 
 Position::Position(int x0, int y0, int x1, int y1)
 {
@@ -80,6 +80,7 @@ ImageProcessing::ImageProcessing()
 AreaImage::AreaImage()
 {
 	rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
+	selectedByMouse = false;
 }
 
 Position AreaImage::points(int maxX, int maxY)
@@ -91,7 +92,7 @@ Position AreaImage::points(int maxX, int maxY)
 		if ( secondCorner.y() >= maxY ) secondCorner.setY(maxY);
 		return Position (firstCorner.x(), firstCorner.y(), secondCorner.x(), secondCorner.y());
 	} else {
-		return Position (0, 0, width(), height());
+		return Position (0, 0, maxX, maxY);
 	}
 }
 
@@ -138,7 +139,7 @@ void ImageProcessing::createActions()
 	linearStretchingRGBAct = new QAction(tr("&Linear RGB histogram stretching"), this);
 	linearStretchingRGBAct->setShortcut((tr("Ctrl+1")));
 	connect(linearStretchingRGBAct, SIGNAL(triggered()), this, SLOT(linearStretchingRGB()));
-
+/*
 	linearStretchingRAct = new QAction(tr("&Linear R histogram stretching"), this);
 	connect(linearStretchingRAct, SIGNAL(triggered()), this, SLOT(linearStretchingR()));
 
@@ -147,7 +148,7 @@ void ImageProcessing::createActions()
 
 	linearStretchingBAct = new QAction(tr("&Linear B histogram stretching"), this);
 	connect(linearStretchingBAct, SIGNAL(triggered()), this, SLOT(linearStretchingB()));
-
+*/
 	linearStretchingChannelsAct = new QAction(tr("&Linear RGB (in turn) histogram stretching"), this);
 	connect(linearStretchingChannelsAct, SIGNAL(triggered()), this, SLOT(linearStretchingChannels()));
 
@@ -190,8 +191,8 @@ void ImageProcessing::createActions()
 	selectByMouseAct->setCheckable(true);
 	connect(selectByMouseAct, SIGNAL(triggered()), this, SLOT(selectByMouse()));
 
-	exitAct = new QAction(tr("E&xit"), this);
-	exitAct->setShortcut(tr("Ctrl+Q"));
+	exitAct = new QAction(tr("&Exit"), this);
+	exitAct->setShortcut(tr("Ctrl+E"));
 	connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
 }
 
@@ -250,7 +251,6 @@ void ImageProcessing::open()
 				    tr("Open File"), QDir::currentPath());
     if (!fileName.isEmpty()) {
 	image->load(fileName, "BMP");
-	//if (image->isNull() || (image->format() != QImage::Format_RGB888)) {
 	if (image->isNull()) {
 	    QMessageBox::information(this, tr("Image Viewer"),
 				     tr("Cannot load %1.").arg(fileName));
@@ -304,10 +304,10 @@ void ImageProcessing::linearStretchingRGB()
 	Position pos = imageLabel->points(image->width(), image->height());
 
 	for (int y = pos.y0; y < pos.y1; y++) {
-		for (int x = pos.x0; x < pos.x1; x++) {
-			double redValue = round(255.0 * (qRed(image->pixel(x,y)) - img.intensityMin) / (img.intensityMax - img.intensityMin));
-			double greenValue = round(255.0 * (qGreen(image->pixel(x,y)) - img.intensityMin) / (img.intensityMax - img.intensityMin));
-			double blueValue = round(255.0 * (qBlue(image->pixel(x,y)) - img.intensityMin) / (img.intensityMax - img.intensityMin));
+                for (int x = pos.x0; x < pos.x1; x++) {
+                        double redValue = qRound(255.0 * (qRed(image->pixel(x,y)) - img.intensityMin) / (img.intensityMax - img.intensityMin));
+                        double greenValue = qRound(255.0 * (qGreen(image->pixel(x,y)) - img.intensityMin) / (img.intensityMax - img.intensityMin));
+                        double blueValue = qRound(255.0 * (qBlue(image->pixel(x,y)) - img.intensityMin) / (img.intensityMax - img.intensityMin));
 			image->setPixel(x, y, qRgb(normalizeColorValue(redValue), normalizeColorValue(greenValue), normalizeColorValue(blueValue)));
 		}
 	}
@@ -339,7 +339,7 @@ void ImageProcessing::linearStretchingR()
 
 	for (int y = pos.y0; y < pos.y1; y++) {
 		for (int x = pos.x0; x < pos.x1; x++) {
-			double redValue = round(255 * (qRed(image->pixel(x,y)) - img.intensityMin) / (img.intensityMax - img.intensityMin));
+                        double redValue = qRound(255 * (qRed(image->pixel(x,y)) - img.intensityMin) / (img.intensityMax - img.intensityMin));
 			double greenValue = qGreen(image->pixel(x,y));
 			double blueValue = qBlue(image->pixel(x,y));
 			image->setPixel(x, y, qRgb(redValue, greenValue, blueValue));
@@ -365,7 +365,7 @@ void ImageProcessing::linearStretchingG()
 	for (int y = pos.y0; y < pos.y1; y++) {
 		for (int x = pos.x0; x < pos.x1; x++) {
 			int redValue = qRed(image->pixel(x,y));
-			double greenValue = round(255 * (qGreen(image->pixel(x,y)) - img.intensityMin) / (img.intensityMax - img.intensityMin));
+                        double greenValue = qRound(255 * (qGreen(image->pixel(x,y)) - img.intensityMin) / (img.intensityMax - img.intensityMin));
 			int blueValue = qBlue(image->pixel(x,y));
 			image->setPixel(x, y, qRgb(redValue, greenValue, blueValue));
 		}
@@ -391,7 +391,7 @@ void ImageProcessing::linearStretchingB()
 		for (int x = pos.x0; x < pos.x1; x++) {
 			int redValue = qRed(image->pixel(x,y));
 			int greenValue = qGreen(image->pixel(x,y));
-			double blueValue = round(255 * (qBlue(image->pixel(x,y)) - img.intensityMin) / (img.intensityMax - img.intensityMin));
+                        double blueValue = qRound(255 * (qBlue(image->pixel(x,y)) - img.intensityMin) / (img.intensityMax - img.intensityMin));
 			image->setPixel(x, y, qRgb(redValue, greenValue, blueValue));
 		}
 	}
@@ -470,11 +470,10 @@ void ImageProcessing::extremumsIntensity(ImgInfo * img)
 }
 
 
-/* Coefficients of kernel in sum are near 1.0 (0.99***). is ok */
 double **ImageProcessing::kernelGauss2D(double sigma, double coeffSharp)
 {
 	double s2 = 2 * sigma * sigma;
-	int partLine = round(3 * sigma + 0.5);
+        int partLine = qRound(3 * sigma + 0.5);
 	int size = 2 * partLine + 1;
 
 	fprintf(stderr, "size %d \n", size);
@@ -486,7 +485,7 @@ double **ImageProcessing::kernelGauss2D(double sigma, double coeffSharp)
 
 	for (int y = 0; y < size; y++) {
 		for (int x = 0; x < size; x++) {
-			kernel[x][y] = coeffSharp * exp (-(pow(partLine - x, 2)+ pow(partLine-y, 2))/ s2);
+                        kernel[x][y] = coeffSharp * exp (-(qPow(partLine - x, 2)+ qPow(partLine-y, 2))/ s2);
 		}
 	}
 	return kernel;
@@ -540,7 +539,6 @@ void ImageProcessing::normalizeKernel2D(double **kernel, int size)
 }
 
 
-
 /* Need to know wheere is sigma allowed. */
 void ImageProcessing::filterSmoothingSimple()
 {
@@ -548,7 +546,7 @@ void ImageProcessing::filterSmoothingSimple()
 	double sigma = QInputDialog::getDouble(this, tr("Sigma"),
 				     tr("Input sigma[0.1; 5.0]:"), 2.0, 0.1, 5.0, 1, &statusOk);
 	if (statusOk) {
-		int partLine = round(3 * sigma + 0.5);
+                int partLine = qRound(3 * sigma + 0.5);
 		int size = 2 * partLine + 1;
 		double **kernel= kernelGauss2D(sigma, 1);
 		normalizeKernel2D(kernel, size);
@@ -573,14 +571,14 @@ void ImageProcessing::deleteKernel2D(double **kernel, int size)
 double *ImageProcessing::kernelGauss1D (double sigma)
 {
 	double s2 = 2 * sigma * sigma;
-	int partLine = round(3 * sigma + 0.5);
+        int partLine = qRound(3 * sigma + 0.5);
 	int size = 2 * partLine + 1;
 
 	double *result = new double [size];
 
 	double sum = 0;
 	for(int i = 0; i < size; i++) {
-		result[i] = exp(- pow(partLine - i, 2)/s2);
+                result[i] = exp(- qPow(partLine - i, 2)/s2);
 		sum += result[i];
 	}
 
@@ -595,11 +593,13 @@ double *ImageProcessing::kernelGauss1D (double sigma)
 /* work, but kernel1D maybe not creating rightly. */
 void ImageProcessing::gaussBlur(double sigma)
 {
-	int partLine = round(3*sigma + 0.5);
+        int partLine = qRound(3*sigma + 0.5);
 	int size = 2 * partLine + 1;
 	double *normalLine = kernelGauss1D(sigma);
 
 	Position pos = imageLabel->points(image->width(), image->height());
+	fprintf(stderr, "pos.x0 = %d, pos.y0 = %d, pos.x1 = %d, pos.y1 = %d",
+			pos.x0, pos.y0, pos.x1, pos.x1);
 
 	/* 	Used effect of mirror near the border with using realPixel(x,y),
 		so additional normalizing doesn't need.
@@ -675,8 +675,8 @@ void ImageProcessing::filterSharpness()
 	double alpha = QInputDialog::getDouble(this, tr("Sigma"),
 				     tr("Input alpha[0.1; 1.0]:"), 0.5, 0.01, 1.0, 2, &statusOk);
 	if (statusOk) {
-		double sigma = 0.6;	// not truethfull value. need to check.;
-		int partLine =  round(3 * sigma + 0.5);
+		double sigma = sharpSigma;	// not truethfull value. need to check.;
+		int partLine =  qRound(3 * sigma + 0.5);
 		int size = 2 * partLine + 1;
 		double **kernel = kernelGauss2D(sigma, -alpha);
 		// Emulate single filter and sum.
@@ -748,6 +748,7 @@ void ImageProcessing::filterMedian()
 	bool statusOk;
 	int size = QInputDialog::getInt(this, tr("Input size of median filter"),
 				     tr("Size of median filter:"), 3, 2, 7, 1, &statusOk);
+
 	if (statusOk) {
 		medianProcess(size);
 		imageLabel->setPixmap(QPixmap::fromImage(*image));
@@ -765,25 +766,20 @@ void ImageProcessing::filterOptional()
 					     tr("Size of kernel:"), items, 0, false, &ok);
 	if (ok && !item.isEmpty()) {
 		int value = item.toInt();
-		int partLine = round(value*1.0/2 - 0.5);
+                int partLine = qRound(value*1.0/2 - 0.5);
 
 		double **kernel = new double* [value];
 		for(int i = 0; i < value; i++) {
 			kernel[i] = new double [value];
 		}
 
-		FindDialog dialog(value, kernel);
+		bool statusKernel;
+		TableDialog dialog(value, kernel, &statusKernel);
 		dialog.exec();
 
-		/* print kernel */
-		for (int i = 0; i < value; i++) {
-			for (int j = 0; j < value; j++) {
-				fprintf(stderr, "%f  ", kernel[i][j]);
-			}
-			fprintf(stderr,"\n");
+		if (statusKernel) {
+		    gaussBlurSimple(partLine, kernel);
 		}
-
-		gaussBlurSimple(partLine, kernel);
 		deleteKernel2D(kernel, value);
 	}
 }
@@ -792,12 +788,21 @@ void ImageProcessing::filterOptional()
 /* Waves effect type 1. */
 void ImageProcessing::wavesShortEffect()
 {
+    bool lOk =false;
+    int l = QInputDialog::getInt(this, tr("Input lenght"),
+				 tr("Lenght:"), 1, 1, 200, 1, &lOk);
+    bool ampOk =false;
+    int amp = QInputDialog::getInt(this, tr("Input amplitude"),
+				 tr("Amplitude:"), 1, 1, 200, 1, &ampOk);
+
+    if (lOk && ampOk) {
+
 	QImage *imageBuf = new QImage(*image);
 	Position pos = imageLabel->points(image->width(), image->height());
 
 	for (int y = pos.y0; y < pos.y1; y++) {
 		for (int x = pos.x0; x < pos.x1; x++) {
-			int newX = x + 20 * sin(2 * pi * x / 30);
+			int newX = x + l * sin(2 * pi * x / amp);
 			int newY = y;
 			if (newX >= pos.x0 && newX < pos.x1) {
 				image->setPixel(x, y, imageBuf->pixel(newX, newY));
@@ -807,18 +812,28 @@ void ImageProcessing::wavesShortEffect()
 
 	delete (imageBuf);
 	imageLabel->setPixmap(QPixmap::fromImage(*image));
-}
+    }
+   }
 
 
 /* Waves effect type 2. */
 void ImageProcessing::wavesLongEffect()
 {
+    bool lOk =false;
+    int l = QInputDialog::getInt(this, tr("Input lenght"),
+				 tr("Lenght:"), 1, 1, 200, 1, &lOk);
+    bool ampOk =false;
+    int amp = QInputDialog::getInt(this, tr("Input amplitude"),
+				 tr("Amplitude:"), 1, 1, 200, 1, &ampOk);
+
+    if (lOk && ampOk) {
+
 	QImage *imageBuf = new QImage(*image);
 	Position pos = imageLabel->points(image->width(), image->height());
 
 	for (int y = pos.y0; y < pos.y1; y++) {
 		for (int x = pos.x0; x < pos.x1; x++) {
-			int newX = x + 20 * sin(2 * pi * y / 128);
+			int newX = x + l * sin(2 * pi * y / amp);
 			int newY = y;
 			if (newX >= pos.x0 && newX < pos.x1) {
 				image->setPixel(x, y, imageBuf->pixel(newX, newY));
@@ -827,27 +842,35 @@ void ImageProcessing::wavesLongEffect()
 	}
 	delete (imageBuf);
 	imageLabel->setPixmap(QPixmap::fromImage(*image));
+    }
 }
 
 
 /* Glass effect */
 void ImageProcessing::glassEffect()
 {
-	QImage *imageBuf = new QImage(*image);
-	Position pos = imageLabel->points(image->width(), image->height());
-	srand((unsigned)time(0));
+	bool radiusOk =false;
+	int size = QInputDialog::getInt(this, tr("Input radius"),
+				     tr("Size of radius:"), 1, 1, 10, 1, &radiusOk);
+	size++;
 
-	for (int y = pos.y0; y < pos.y1; y++) {
-		for (int x = pos.x0; x < pos.x1; x++) {
-			int newX = x + (rand()%2 - 0.5) * 10;
-			int newY = y + (rand()%2 - 0.5) * 10;
-			if (newX >= 0 && newX < image->width() && newY >= 0 && newY < image->height()) {
+	if (radiusOk) {
+	    QImage *imageBuf = new QImage(*image);
+	    Position pos = imageLabel->points(image->width(), image->height());
+	    srand((unsigned)time(0));
+
+	    for (int y = pos.y0; y < pos.y1; y++) {
+		    for (int x = pos.x0; x < pos.x1; x++) {
+			    int newX = x + (rand()%size - 0.5) * 10;
+			    int newY = y + (rand()%size - 0.5) * 10;
+			    if (newX >= 0 && newX < image->width() && newY >= 0 && newY < image->height()) {
 				image->setPixel(x, y, imageBuf->pixel(newX, newY));
-			}
-		}
+			    }
+		    }
+	    }
+		delete(imageBuf);
+	    imageLabel->setPixmap(QPixmap::fromImage(*image));
 	}
-	delete(imageBuf);
-	imageLabel->setPixmap(QPixmap::fromImage(*image));
 }
 
 

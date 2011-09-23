@@ -5,7 +5,7 @@
 #include <QLabel>
 #include <QRubberBand>
 #include <QRect>
-#include "finddialog.h"
+#include "TableDialog.h"
 #define MAX_LENGHT_HISTOGRAM 256
 
 QT_BEGIN_NAMESPACE
