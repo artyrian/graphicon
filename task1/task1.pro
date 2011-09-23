@@ -12,7 +12,7 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         imageprocessing.cpp \
-    filterdialog.cpp
+    finddialog.cpp
 
 HEADERS  += imageprocessing.h \
-    filterdialog.h
+    finddialog.h

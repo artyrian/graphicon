@@ -1,16 +1,14 @@
 #include <QtGui>
 #include "imageprocessing.h"
-#include "filterdialog.h"
-#include <QRgb>
 #include <time.h>
-
 
 // BT.709: Y = 0.2125·R + 0.7154·G + 0.0721·B
 const double coeffRed = 0.2125;
 const double coeffGreen = 0.7154;
 const double coeffBlue = 0.0721;
-const double pi = 3.1415;
+const double pi = 3.1416;
 const int sharpSigma = 1;
+const double sigmaScale  = 1.0;
 
 Position::Position(int x0, int y0, int x1, int y1)
 {
@@ -64,19 +62,19 @@ ImageProcessing::ImageProcessing()
 	imageLabel = new AreaImage;
 
 	imageLabel->setBackgroundRole(QPalette::Dark);
-        imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-        imageLabel->setScaledContents(true);
+	imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+	imageLabel->setScaledContents(true);
 
-        scrollArea = new QScrollArea;
+	scrollArea = new QScrollArea;
 	scrollArea->setBackgroundRole(QPalette::Dark);
-        scrollArea->setWidget(imageLabel);
-        setCentralWidget(scrollArea);
+	scrollArea->setWidget(imageLabel);
+	setCentralWidget(scrollArea);
 
-        createActions();
-        createMenus();
+	createActions();
+	createMenus();
 
-        setWindowTitle(tr("Image Processing"));
-        resize (500, 400);
+	setWindowTitle(tr("Image Processing"));
+	resize (500, 400);
 }
 
 AreaImage::AreaImage()
@@ -132,10 +130,10 @@ void ImageProcessing::createActions()
 	openAct->setShortcut(tr("Ctrl+O"));
 	connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
 
-        saveAct = new QAction(tr("&Save..."), this);
-        saveAct->setShortcut(tr("Ctrl+S"));
-        saveAct->setDisabled(true);
-        connect(saveAct, SIGNAL(triggered()), this, SLOT(save()));
+	saveAct = new QAction(tr("&Save..."), this);
+	saveAct->setShortcut(tr("Ctrl+S"));
+	saveAct->setDisabled(true);
+	connect(saveAct, SIGNAL(triggered()), this, SLOT(save()));
 
 	linearStretchingRGBAct = new QAction(tr("&Linear RGB histogram stretching"), this);
 	linearStretchingRGBAct->setShortcut((tr("Ctrl+1")));
@@ -193,25 +191,26 @@ void ImageProcessing::createActions()
 	connect(selectByMouseAct, SIGNAL(triggered()), this, SLOT(selectByMouse()));
 
 	exitAct = new QAction(tr("E&xit"), this);
-        exitAct->setShortcut(tr("Ctrl+Q"));
-        connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
-
+	exitAct->setShortcut(tr("Ctrl+Q"));
+	connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
 }
 
 void ImageProcessing::createMenus()
 {
 	fileMenu = new QMenu(tr("&File"), this);
 	fileMenu->addAction(openAct);
-        fileMenu->addAction(saveAct);
+	fileMenu->addAction(saveAct);
 	fileMenu->addSeparator();
-        fileMenu->addAction(exitAct);
+	fileMenu->addAction(exitAct);
 
 	filterMenu = new QMenu(tr("Fi&lters"), this);
 	filterMenu->setDisabled(true);
 	filterMenu->addAction(linearStretchingRGBAct);
+/*
 	filterMenu->addAction(linearStretchingRAct);
 	filterMenu->addAction(linearStretchingGAct);
 	filterMenu->addAction(linearStretchingBAct);
+*/
 	filterMenu->addAction(linearStretchingChannelsAct);
 	filterMenu->addSeparator();
 	filterMenu->addAction(grayWorldAct);
@@ -237,23 +236,25 @@ void ImageProcessing::createMenus()
 	optionsMenu->setDisabled(true);
 	optionsMenu->addAction(selectByMouseAct);
 
-        menuBar()->addMenu(fileMenu);
+	menuBar()->addMenu(fileMenu);
 	menuBar()->addMenu(filterMenu);
 	menuBar()->addMenu(effectsMenu);
 	menuBar()->addMenu(transformationMenu);
 	menuBar()->addMenu(optionsMenu);
 }
 
+/* Open file. */
 void ImageProcessing::open()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
-                                    tr("Open File"), QDir::currentPath());
+				    tr("Open File"), QDir::currentPath());
     if (!fileName.isEmpty()) {
 	image->load(fileName, "BMP");
-        if (image->isNull()) {
-            QMessageBox::information(this, tr("Image Viewer"),
-                                     tr("Cannot load %1.").arg(fileName));
-            return;
+	//if (image->isNull() || (image->format() != QImage::Format_RGB888)) {
+	if (image->isNull()) {
+	    QMessageBox::information(this, tr("Image Viewer"),
+				     tr("Cannot load %1.").arg(fileName));
+	    return;
 	}
 
 	imageLabel->setPixmap(QPixmap::fromImage(*image));
@@ -270,11 +271,13 @@ void ImageProcessing::open()
     }
 }
 
+
+/* Save to path. Dialog in function. */
 void ImageProcessing::save()
 {
-        QString fileName = QFileDialog::getSaveFileName(this,
-                                                        tr("Save File"),
-                                                        QDir::currentPath());
+	QString fileName = QFileDialog::getSaveFileName(this,
+							tr("Save File"),
+							QDir::currentPath());
 
 	if (fileName.isEmpty()) {
 		return;
@@ -287,6 +290,8 @@ void ImageProcessing::save()
 	image->save(fileName, "BMP");
 }
 
+
+/* Linear strething RGB. Used extremumsIntensity() */
 void ImageProcessing::linearStretchingRGB()
 {
 	ImgInfo img(coeffRed, coeffGreen, coeffBlue);
@@ -307,9 +312,11 @@ void ImageProcessing::linearStretchingRGB()
 		}
 	}
 
-        imageLabel->setPixmap(QPixmap::fromImage(*image));
+	imageLabel->setPixmap(QPixmap::fromImage(*image));
 }
 
+
+/* Linear strething channels in queue. */
 void ImageProcessing::linearStretchingChannels()
 {
 	linearStretchingR();
@@ -317,6 +324,8 @@ void ImageProcessing::linearStretchingChannels()
 	linearStretchingB();
 }
 
+
+/* Linear strething R. Used extremumsIntensity() */
 void ImageProcessing::linearStretchingR()
 {
 	ImgInfo img(1, 0 , 0);
@@ -340,6 +349,8 @@ void ImageProcessing::linearStretchingR()
 	imageLabel->setPixmap(QPixmap::fromImage(*image));
 }
 
+
+/* Linear strething G. Used extremumsIntensity() */
 void ImageProcessing::linearStretchingG()
 {
 	ImgInfo img(0, 1 , 0);
@@ -363,6 +374,8 @@ void ImageProcessing::linearStretchingG()
 	imageLabel->setPixmap(QPixmap::fromImage(*image));
 }
 
+
+/* Linear strething B. Used extremumsIntensity() */
 void ImageProcessing::linearStretchingB()
 {
 	ImgInfo img(0, 0 , 1);
@@ -386,14 +399,16 @@ void ImageProcessing::linearStretchingB()
 	imageLabel->setPixmap(QPixmap::fromImage(*image));
 }
 
+
+/* Grayworld. For regions also. Allright, now only practice tests. */
 void ImageProcessing::grayWorld()
 {
-	double coeffPixels = 1.0 / (image->height()*image->width());
+	Position pos = imageLabel->points(image->width(), image->height());
+
+	double coeffPixels = 1.0 / ((pos.x1 - pos.x0) * (pos.y1 - pos.y0));
 	double Rsum = 0;
 	double Gsum = 0;
 	double Bsum = 0;
-
-	Position pos = imageLabel->points(image->width(), image->height());
 
 	for (int y = pos.y0; y < pos.y1; y++) {
 		for (int x = pos.x0; x < pos.x1; x++) {
@@ -422,6 +437,8 @@ void ImageProcessing::grayWorld()
 	imageLabel->setPixmap(QPixmap::fromImage(*image));
 }
 
+
+/* if value of color < 0 or >255 write allowed nearest value */
 int ImageProcessing::normalizeColorValue (double color)
 {
 	if (color > 255) {
@@ -429,9 +446,10 @@ int ImageProcessing::normalizeColorValue (double color)
 	} else if (color < 0 ) {
 		return 0;
 	} else return color;
-
 }
 
+
+/* Count intensity value with reading coefficients in ImgInfo::coeffR(G, B) */
 void ImageProcessing::extremumsIntensity(ImgInfo * img)
 {
 	Position pos = imageLabel->points(image->width(), image->height());
@@ -451,33 +469,37 @@ void ImageProcessing::extremumsIntensity(ImgInfo * img)
 	}
 }
 
+
+/* Coefficients of kernel in sum are near 1.0 (0.99***). is ok */
 double **ImageProcessing::kernelGauss2D(double sigma, double coeffSharp)
 {
 	double s2 = 2 * sigma * sigma;
-	int partLine = round(3 * sigma);
+	int partLine = round(3 * sigma + 0.5);
 	int size = 2 * partLine + 1;
 
-	double **kernel = new double* [size * sizeof(double*)];
+	fprintf(stderr, "size %d \n", size);
+
+	double **kernel = new double* [size];
 	for(int i = 0; i < size; i++) {
-		kernel[i] = new double [size * sizeof(double)];
+		kernel[i] = new double [size];
 	}
 
 	for (int y = 0; y < size; y++) {
 		for (int x = 0; x < size; x++) {
-			kernel[x][y] = coeffSharp * (1.0/(pi*s2)) * exp (-(pow(partLine - x, 2)+ pow(partLine-y, 2))/ s2);
+			kernel[x][y] = coeffSharp * exp (-(pow(partLine - x, 2)+ pow(partLine-y, 2))/ s2);
 		}
 	}
 	return kernel;
 }
 
-void ImageProcessing::gaussBlurSimple(double sigma, double **kernel)
+
+/* Simple realization of Gblur with 2d kernel. */
+void ImageProcessing::gaussBlurSimple(int partLine, double **kernel)
 {
-	int partLine = round(3 * sigma);
-	int size = 2*partLine + 1;
+	int size = 2 * partLine + 1;
 
 	Position pos = imageLabel->points(image->width(), image->height());
-
-	QImage *imageBuf = new QImage (pos.x1-pos.x0, pos.y1-pos.y0, QImage::Format_RGB888);
+	QImage *imageBuf = new QImage (pos.x1 - pos.x0, pos.y1 - pos.y0, QImage::Format_RGB888);
 
 	for(int y = pos.y0; y < pos.y1; y++) {
 		for(int x = pos.x0; x < pos.x1; x++) {
@@ -486,148 +508,208 @@ void ImageProcessing::gaussBlurSimple(double sigma, double **kernel)
 				int j = y + m - partLine;
 				for (int n = 0; n < size; n++) {
 					int i = x + n - partLine;
-						QRgb neibPix = realPixel(i, j) ;
-						pix.add(qRed(neibPix) * kernel[n][m],
-							qGreen(neibPix) * kernel[n][m],
-							qBlue(neibPix) * kernel[n][m]);
-						pix.addSumNormal(kernel[n][m]);
+					QRgb neibPix = realPixel(i, j);
+					pix.add(qRed(neibPix) * kernel[n][m],
+						qGreen(neibPix) * kernel[n][m],
+						qBlue(neibPix) * kernel[n][m]);
 				}
 			}
-			pix.normalize();
 			imageBuf->setPixel(x - pos.x0, y - pos.y0, qRgb(normalizeColorValue(pix.red),
 									normalizeColorValue(pix.green),
 									normalizeColorValue(pix.blue)));
-		 }
+		}
 	}
-
 	copyImageBuf(imageBuf);
 	delete(imageBuf);
 }
 
+
+void ImageProcessing::normalizeKernel2D(double **kernel, int size)
+{
+	double sum = 0;
+	for (int y = 0; y < size; y++) {
+		for (int x = 0; x < size; x++) {
+			sum += kernel[x][y];
+		}
+	}
+	for (int y = 0; y < size; y++) {
+		for (int x = 0; x < size; x++) {
+			kernel[x][y] /= sum;
+		}
+	}
+}
+
+
+
+/* Need to know wheere is sigma allowed. */
 void ImageProcessing::filterSmoothingSimple()
 {
 	bool statusOk;
-	int size = QInputDialog::getInt(this, tr("QInputDialog::getInteger()"),
-				     tr("Power of blur:"), 1, 1, 3, 1, &statusOk);
+	double sigma = QInputDialog::getDouble(this, tr("Sigma"),
+				     tr("Input sigma[0.1; 5.0]:"), 2.0, 0.1, 5.0, 1, &statusOk);
 	if (statusOk) {
-		double sigma = size * 1.0 / 3;
+		int partLine = round(3 * sigma + 0.5);
+		int size = 2 * partLine + 1;
 		double **kernel= kernelGauss2D(sigma, 1);
-		gaussBlurSimple(sigma, kernel);
+		normalizeKernel2D(kernel, size);
+		gaussBlurSimple(partLine, kernel);
+		deleteKernel2D(kernel, size);
 		imageLabel->setPixmap(QPixmap::fromImage(*image));
 	}
 }
 
+void ImageProcessing::deleteKernel2D(double **kernel, int size)
+{
+	/* Free */
+	for (int i = 0; i < size; i++) {
+		delete [] kernel[i];
+	}
+	delete [] kernel;
+}
+
+
+
+/* Work, but need to know right sigma diaposon */
 double *ImageProcessing::kernelGauss1D (double sigma)
 {
-	int s2 = 2 * sigma * sigma;
-	int partLine = round(3 * sigma);
-	double *result = new double [(2 * partLine + 1) * sizeof(double)];
+	double s2 = 2 * sigma * sigma;
+	int partLine = round(3 * sigma + 0.5);
+	int size = 2 * partLine + 1;
 
-	//result[partLine] = 1;
-	for(int i = 0; i <= partLine; i++) {
-		result[partLine + i] = result[partLine - i] = (1.0/(sqrt(2*pi)*sigma)) * exp (-i*i/s2);
+	double *result = new double [size];
+
+	double sum = 0;
+	for(int i = 0; i < size; i++) {
+		result[i] = exp(- pow(partLine - i, 2)/s2);
+		sum += result[i];
+	}
+
+	for(int i = 0; i < size; i++) {
+		result[i] /= sum;
 	}
 
 	return result;
 }
 
+
+/* work, but kernel1D maybe not creating rightly. */
 void ImageProcessing::gaussBlur(double sigma)
 {
-	int partLine = round (3*sigma);
+	int partLine = round(3*sigma + 0.5);
+	int size = 2 * partLine + 1;
 	double *normalLine = kernelGauss1D(sigma);
 
 	Position pos = imageLabel->points(image->width(), image->height());
 
+	/* 	Used effect of mirror near the border with using realPixel(x,y),
+		so additional normalizing doesn't need.
+		So maybe some slowly. Don't kill me :)
+	 */
+
 	// Horizontal;
-	QRgb *pixHArray = new QRgb [(pos.x1 - pos.x0) * sizeof(QRgb)];
+	QRgb *pixHArray = new QRgb [pos.x1 - pos.x0];
 	for(int y = pos.y0; y < pos.y1; y++) {
 		for(int x = pos.x0; x < pos.x1; x++) {
 			PixelRGBSpecific pix;
-			for (int i = 0; i <= 2 * partLine; i++) {
+			for (int i = 0; i < size; i++) {
 				int j = x + i - partLine;
-			//	if (j >= pos.x0 && j < pos.x1) {
-					QRgb neibPix = realPixel(j, y);//image->pixel(j, y);
-					pix.add(qRed(neibPix) * normalLine[i],
-						qGreen(neibPix) * normalLine[i],
-						qBlue(neibPix) * normalLine[i]);
-					pix.addSumNormal(normalLine[i]);
-				//}
+				QRgb neibPix = realPixel(j, y);
+				pix.add(qRed(neibPix) * normalLine[i],
+					qGreen(neibPix) * normalLine[i],
+					qBlue(neibPix) * normalLine[i]);
 			}
-			pix.normalize();
-			pixHArray[x] = qRgb(pix.red, pix.green, pix.blue);
+			pixHArray[x - pos.x0] = qRgb(normalizeColorValue(pix.red),
+						normalizeColorValue(pix.green),
+						normalizeColorValue(pix.blue));
 		}
 		for (int x = pos.x0; x < pos.x1; x++) {
-			image->setPixel(x, y, pixHArray[x]);
+			image->setPixel(x, y, pixHArray[x - pos.x0]);
 		}
 	}
 
 	// Vertical;
-	QRgb *pixVArray = new QRgb [(pos.y1 - pos.y0) * sizeof(QRgb)];
+	QRgb *pixVArray = new QRgb [pos.y1 - pos.y0];
 	for(int x = pos.x0; x < pos.x1; x++) {
 		for(int y = pos.y0; y < pos.y1; y++) {
 			PixelRGBSpecific pix;
-			for (int i = 0; i <= 2 * partLine; i++) {
+			for (int i = 0; i < size; i++) {
 				int j = y + i - partLine;
-				//if (j >= pos.y0 && j < pos.y1) {
-					QRgb neibPix = realPixel (x, j);//image->pixel(x, j);
-					pix.add(qRed(neibPix) * normalLine[i],
-						qGreen(neibPix) *normalLine[i],
-						qBlue(neibPix) * normalLine[i]);
-					pix.addSumNormal(normalLine[i]);
-				//}
+				QRgb neibPix = realPixel (x, j);
+				pix.add(qRed(neibPix) * normalLine[i],
+					qGreen(neibPix) *normalLine[i],
+					qBlue(neibPix) * normalLine[i]);
 			}
-			pix.normalize();
-			pixVArray[y] = qRgb(pix.red, pix.green, pix.blue);
+			pixVArray[y - pos.y0] = qRgb(normalizeColorValue(pix.red),
+						normalizeColorValue(pix.green),
+						normalizeColorValue(pix.blue));
 		}
 		for (int y = pos.y0; y < pos.y1; y++) {
-			image->setPixel(x, y, pixVArray[y]);
+			image->setPixel(x, y, pixVArray[y - pos.y0]);
 		}
 	}
 
-	delete(pixHArray);
-	delete(pixVArray);
+	delete [] normalLine;
+	delete [] pixHArray;
+	delete [] pixVArray;
 }
 
+
+/* Need to know wheere is sigma allowed. */
 void ImageProcessing::filterSmoothing()
 {
 	bool statusOk;
-	int value = QInputDialog::getInt(this, tr("QInputDialog::getInteger()"),
-				     tr("Power of smoothing:"), 1, 1, 3, 1, &statusOk);
+	double sigma = QInputDialog::getDouble(this, tr("Sigma"),
+				     tr("Input sigma[0.5; 5.0]:"), 2.0, 0.1, 5.0, 1, &statusOk);
 	if (statusOk) {
-		gaussBlur(value);
+		gaussBlur(sigma);
 		imageLabel->setPixmap(QPixmap::fromImage(*image));
 	}
 }
 
+
+/* Work with simple gauss. (kernel2D with coeff alpha)
+	Need ask alpha and right sigma */
 void ImageProcessing::filterSharpness()
 {
-	double alpha = 0.1;
-	double sigma = 1.0/3;
-	int partLine =  round(3 * sigma);
-	double **kernel = kernelGauss2D(sigma, -alpha);
-
-	kernel[partLine][partLine] += 1 + alpha;
-
-	gaussBlurSimple(sigma, kernel);
-
-	imageLabel->setPixmap(QPixmap::fromImage(*image));
+	bool statusOk;
+	double alpha = QInputDialog::getDouble(this, tr("Sigma"),
+				     tr("Input alpha[0.1; 1.0]:"), 0.5, 0.01, 1.0, 2, &statusOk);
+	if (statusOk) {
+		double sigma = 0.6;	// not truethfull value. need to check.;
+		int partLine =  round(3 * sigma + 0.5);
+		int size = 2 * partLine + 1;
+		double **kernel = kernelGauss2D(sigma, -alpha);
+		// Emulate single filter and sum.
+		kernel[partLine][partLine] += 1 + alpha;
+		normalizeKernel2D(kernel, size);
+		gaussBlurSimple(partLine, kernel);
+		deleteKernel2D(kernel, size);
+		imageLabel->setPixmap(QPixmap::fromImage(*image));
+	}
 }
 
+
+/* Compare two elements. Need for qsort() in median filter. */
 int compare(const void *a, const void *b)
 {
 	return (*(char*)a -*(char*)b);
 }
 
+/* Compare two elements. Need for qsort() in median filter. */
+int compare_double(const void *a, const void *b)
+{
+	return (*(double*)a -*(double*)b);
+}
+
+/* Realization of median filter*/
 void ImageProcessing::medianProcess(int size)
 {
-	Position pos = imageLabel->points(image->width(), image->height());
-
-	char *rArray = new char[size*size*(sizeof(char))];
-	char *gArray = new char[size*size*(sizeof(char))];
-	char *bArray = new char[size*size*(sizeof(char))];
-
+	char *rArray = new char[size*size];
+	char *gArray = new char[size*size];
+	char *bArray = new char[size*size];
 	int halfSize = (size%2 == 0) ? size/2 - 1 : (size - 1) / 2;
 
+	Position pos = imageLabel->points(image->width(), image->height());
 	QImage *imageBuf = new QImage (pos.x1-pos.x0, pos.y1-pos.y0, QImage::Format_RGB888);
 
 	for(int y = pos.y0; y < pos.y1; y++) {
@@ -653,38 +735,64 @@ void ImageProcessing::medianProcess(int size)
 	}
 	copyImageBuf(imageBuf);
 	delete(imageBuf);
-	delete(rArray);
-	delete(gArray);
-	delete(bArray);
+	delete [] rArray;
+	delete [] gArray;
+	delete [] bArray;
 	fprintf (stderr, "x\n");
 }
 
+
+/* Need a size of median filter. now 2...7 */
 void ImageProcessing::filterMedian()
 {
 	bool statusOk;
 	int size = QInputDialog::getInt(this, tr("Input size of median filter"),
-				     tr("Size of median filter:"), 1, 1, 5, 1, &statusOk);
+				     tr("Size of median filter:"), 3, 2, 7, 1, &statusOk);
 	if (statusOk) {
 		medianProcess(size);
 		imageLabel->setPixmap(QPixmap::fromImage(*image));
 	}
 }
 
+
+/* Need normalize, or not?! To be or not to be.. */
 void ImageProcessing::filterOptional()
 {
-	bool statusOk;
-	int value = QInputDialog::getInt(this, tr("Input size kernel"),
-				  tr("Size of kernel:"), 1, 1, 10, 1, &statusOk);
-	if (statusOk) {
-		FilterDialog dial;
-		dial.show();
+	bool ok;
+	QStringList items;
+	items << tr("3") << tr("5") << tr("7");
+	QString item = QInputDialog::getItem(this, tr("Input size kernel"),
+					     tr("Size of kernel:"), items, 0, false, &ok);
+	if (ok && !item.isEmpty()) {
+		int value = item.toInt();
+		int partLine = round(value*1.0/2 - 0.5);
+
+		double **kernel = new double* [value];
+		for(int i = 0; i < value; i++) {
+			kernel[i] = new double [value];
+		}
+
+		FindDialog dialog(value, kernel);
+		dialog.exec();
+
+		/* print kernel */
+		for (int i = 0; i < value; i++) {
+			for (int j = 0; j < value; j++) {
+				fprintf(stderr, "%f  ", kernel[i][j]);
+			}
+			fprintf(stderr,"\n");
+		}
+
+		gaussBlurSimple(partLine, kernel);
+		deleteKernel2D(kernel, value);
 	}
 }
 
+
+/* Waves effect type 1. */
 void ImageProcessing::wavesShortEffect()
 {
-	QImage *imageBuf = new QImage(image->width(), image->height(), QImage::Format_RGB888);
-
+	QImage *imageBuf = new QImage(*image);
 	Position pos = imageLabel->points(image->width(), image->height());
 
 	for (int y = pos.y0; y < pos.y1; y++) {
@@ -692,20 +800,20 @@ void ImageProcessing::wavesShortEffect()
 			int newX = x + 20 * sin(2 * pi * x / 30);
 			int newY = y;
 			if (newX >= pos.x0 && newX < pos.x1) {
-				imageBuf->setPixel(x, y, image->pixel(newX, newY));
+				image->setPixel(x, y, imageBuf->pixel(newX, newY));
 			}
 		}
 	}
 
-	delete (image);
-	image = imageBuf;
-	imageLabel->setPixmap(QPixmap::fromImage(*imageBuf));
+	delete (imageBuf);
+	imageLabel->setPixmap(QPixmap::fromImage(*image));
 }
 
+
+/* Waves effect type 2. */
 void ImageProcessing::wavesLongEffect()
 {
-	QImage *imageBuf = new QImage(image->width(), image->height(), QImage::Format_RGB888);
-
+	QImage *imageBuf = new QImage(*image);
 	Position pos = imageLabel->points(image->width(), image->height());
 
 	for (int y = pos.y0; y < pos.y1; y++) {
@@ -713,18 +821,19 @@ void ImageProcessing::wavesLongEffect()
 			int newX = x + 20 * sin(2 * pi * y / 128);
 			int newY = y;
 			if (newX >= pos.x0 && newX < pos.x1) {
-				imageBuf->setPixel(x, y, image->pixel(newX, newY));
+				image->setPixel(x, y, imageBuf->pixel(newX, newY));
 			}
 		}
 	}
-	delete (image);
-	image = imageBuf;
-	imageLabel->setPixmap(QPixmap::fromImage(*imageBuf));
+	delete (imageBuf);
+	imageLabel->setPixmap(QPixmap::fromImage(*image));
 }
 
+
+/* Glass effect */
 void ImageProcessing::glassEffect()
 {
-	QImage *imageBuf = new QImage(image->width(), image->height(), QImage::Format_RGB888);
+	QImage *imageBuf = new QImage(*image);
 	Position pos = imageLabel->points(image->width(), image->height());
 	srand((unsigned)time(0));
 
@@ -733,45 +842,71 @@ void ImageProcessing::glassEffect()
 			int newX = x + (rand()%2 - 0.5) * 10;
 			int newY = y + (rand()%2 - 0.5) * 10;
 			if (newX >= 0 && newX < image->width() && newY >= 0 && newY < image->height()) {
-				imageBuf->setPixel(x, y, image->pixel(newX, newY));
+				image->setPixel(x, y, imageBuf->pixel(newX, newY));
 			}
 		}
 	}
-	copyImageBuf(imageBuf);
 	delete(imageBuf);
 	imageLabel->setPixmap(QPixmap::fromImage(*image));
 }
 
-QRgb ImageProcessing:: bilinearInterpolation(double x, double y)
+
+/* Bilinear interpolation. Round x, y up and down. If one of point not in region return blackpoint */
+QRgb ImageProcessing:: bilinearInterpolation(double x, double y, QImage *img)
 {
 	int leftX = x;
-	int rightX = ++x;
+	int rightX = leftX + 1;
 	double deltaX = x - leftX;
 
 	int upY  = y;
-	int downY = ++y;
-	double deltaY = y - downY;
+	int downY = upY + 1;
+	double deltaY = y - upY;
 
-	if (leftX >= 0 && rightX < image->width() && upY >= 0 && downY < image->height()) {
-		int red = (1 - deltaX) * (1 - deltaY) * qRed(image->pixel(leftX, upY)) +
-			deltaX * (1 - deltaY) * qRed(image->pixel(rightX, upY)) +
-			(1 - deltaX) * deltaY * qRed(image->pixel(leftX, downY)) +
-			deltaX * deltaY * qRed(image->pixel(rightX, downY));
-		int green = (1 - deltaX) * (1 - deltaY) * qGreen(image->pixel(leftX, upY)) +
-			deltaX * (1 - deltaY) * qGreen(image->pixel(rightX, upY)) +
-			(1 - deltaX) * (deltaY) * qGreen(image->pixel(leftX, downY)) +
-			deltaX * deltaY * qGreen(image->pixel(rightX, downY));
-		int blue = (1 - deltaX) * (1 - deltaY) * qBlue(image->pixel(leftX, upY)) +
-			deltaX * (1 - deltaY) * qBlue(image->pixel(rightX, upY)) +
-			(1 - deltaX) * deltaY * qBlue(image->pixel(leftX, downY)) +
-			deltaX * deltaY * qBlue(image->pixel(rightX, downY));
-		return qRgb(normalizeColorValue(red), normalizeColorValue(green), normalizeColorValue(blue));
-	} else {
-		return qRgb(0, 0, 0);
-	}
-
+	int red = (1 - deltaX) * (1 - deltaY) * qRed(img->pixel(leftX, upY)) +
+		deltaX * (1 - deltaY) * qRed(img->pixel(rightX, upY)) +
+		(1 - deltaX) * deltaY * qRed(img->pixel(leftX, downY)) +
+		deltaX * deltaY * qRed(img->pixel(rightX, downY));
+	int green = (1 - deltaX) * (1 - deltaY) * qGreen(img->pixel(leftX, upY)) +
+		deltaX * (1 - deltaY) * qGreen(img->pixel(rightX, upY)) +
+		(1 - deltaX) * (deltaY) * qGreen(img->pixel(leftX, downY)) +
+		deltaX * deltaY * qGreen(img->pixel(rightX, downY));
+	int blue = (1 - deltaX) * (1 - deltaY) * qBlue(img->pixel(leftX, upY)) +
+		deltaX * (1 - deltaY) * qBlue(img->pixel(rightX, upY)) +
+		(1 - deltaX) * deltaY * qBlue(img->pixel(leftX, downY)) +
+		deltaX * deltaY * qBlue(img->pixel(rightX, downY));
+	return qRgb(normalizeColorValue(red), normalizeColorValue(green), normalizeColorValue(blue));
 }
 
+
+/* Create big region points */
+QRect ImageProcessing::setBigRegion(int xCenter, int yCenter, double r)
+{
+	Position pos = imageLabel->points(image->width(), image->height());
+	double xArray[4];
+	double yArray[4];
+
+	xArray[0] = ((pos.x0 - xCenter) * cos(r) - (pos.y0 - yCenter) * sin(r)) + xCenter;
+	yArray[0] = ((pos.x0 - xCenter) * sin(r) + (pos.y0 - yCenter) * cos(r)) + yCenter;
+	xArray[1] = ((pos.x0 - xCenter) * cos(r) - (pos.y1 - yCenter) * sin(r)) + xCenter;
+	yArray[1] = ((pos.x0 - xCenter) * sin(r) + (pos.y1 - yCenter) * cos(r)) + yCenter;
+	xArray[2] = ((pos.x1 - xCenter) * cos(r) - (pos.y0 - yCenter) * sin(r)) + xCenter;
+	yArray[2] = ((pos.x1 - xCenter) * sin(r) + (pos.y0 - yCenter) * cos(r)) + yCenter;
+	xArray[3] = ((pos.x1 - xCenter) * cos(r) - (pos.y1 - yCenter) * sin(r)) + xCenter;
+	yArray[3] = ((pos.x1 - xCenter) * sin(r) + (pos.y1 - yCenter) * cos(r)) + yCenter;
+
+	qsort(xArray, 4, sizeof(double), compare_double);
+	qsort(yArray, 4, sizeof(double), compare_double);
+
+	xArray[0] = (xArray[0] < 0) ? 0 : xArray[0];
+	yArray[0] = (yArray[0] < 0) ? 0 : yArray[0];
+	xArray[3] = (xArray[3] >= image->width()) ? image->width() : xArray[3];
+	yArray[3] = (yArray[3] >= image->height()) ? image->height() : yArray[3];
+
+	return QRect(QPoint(xArray[0], yArray[0]), QPoint(xArray[3], yArray[3]));
+}
+
+
+/* Rotate -180.. 180 (also for region */
 void ImageProcessing::rotate()
 {
 	bool statusOk;
@@ -781,27 +916,40 @@ void ImageProcessing::rotate()
 		return;
 	}
 
-	QImage *imageBuf = new QImage(image->width(), image->height(), QImage::Format_RGB888);
-
 	Position pos = imageLabel->points(image->width(), image->height());
-
-	int xCenter = (pos.x1 - pos.x0) / 2;
-	int yCenter = (pos.y1 - pos.y0) / 2;
-
-	double r = - value * pi / 180;
-	for (int y = pos.y0; y < pos.y1; y++) {
-		for (int x = pos.x0; x < pos.x1; x++) {
-			double xNew = (x - xCenter) * cos(r) - (y - yCenter) * sin(r);
-			double yNew = (x - xCenter) * sin(r) + (y - yCenter) * cos(r);
-			QRgb pix = bilinearInterpolation(xNew + xCenter, yNew + yCenter);
-			imageBuf->setPixel(x, y, pix);
+	QImage *imageBuf = new QImage(pos.x1 - pos.x0, pos.y1 - pos.y0, QImage::Format_RGB888);
+	for(int y = pos.y0; y < pos.y1; y++) {
+		for(int x = pos.x0; x < pos.x1; x++) {
+			imageBuf->setPixel(x - pos.x0,y - pos.y0, image->pixel(x,y));
+			image->setPixel(x, y, qRgb(0, 0, 0));
 		}
 	}
-	copyImageBuf(imageBuf);
+
+	int xCenter = pos.x0 + (pos.x1 - pos.x0) / 2;
+	int yCenter = pos.y0 + (pos.y1 - pos.y0) / 2;
+	double r = -value * pi / 180;
+
+	QRect region = setBigRegion(xCenter, yCenter, r);
+
+	fprintf(stderr, "top %d; bottom %d; left %d; right %d; x0 %d; y0%d;.\n", region.top(), region.bottom(), region.left(), region.right(), pos.x0, pos.y0);
+
+	for (int y = region.top(); y < region.bottom(); y++) {
+		for (int x = region.left(); x < region.right(); x++) {
+			double xOld= (x - xCenter) * cos(r) - (y - yCenter) * sin(r) + xCenter - pos.x0;
+			double yOld= (x - xCenter) * sin(r) + (y - yCenter) * cos(r) + yCenter - pos.y0;
+			if (xOld >= 0  && xOld < imageBuf->width() - 1 && yOld >= 0 && yOld < imageBuf->height() - 1) {
+				QRgb pix = bilinearInterpolation(xOld, yOld, imageBuf);
+				image->setPixel(x, y, pix);
+			}
+		}
+	}
+
 	delete(imageBuf);
 	imageLabel->setPixmap(QPixmap::fromImage(*image));
 }
 
+
+/* Scale. Zoom in and zoom out. Handle paint dark rectangle if scale < 1.0.*/
 void ImageProcessing::scale()
 {
 	bool statusOk;
@@ -811,26 +959,48 @@ void ImageProcessing::scale()
 		return;
 	}
 
-	QImage *imageBuf = new QImage(image->width(), image->height(), QImage::Format_RGB888);
+	if (value < 1) {
+		gaussBlur(sigmaScale);
+	}
 
 	Position pos = imageLabel->points(image->width(), image->height());
-
-	int xCenter = (pos.x1 - pos.x0) / 2;
-	int yCenter = (pos.y1 - pos.y0) / 2;
-	for (int y = pos.y0; y < pos.y1; y++) {
-		for (int x = pos.x0; x < pos.x1; x++) {
-			double xNew = (x - xCenter) / value ;
-			double yNew = (y - yCenter) / value ;
-			QRgb pix = bilinearInterpolation(xNew + xCenter, yNew + yCenter);
-			imageBuf->setPixel(x, y, pix);
+	QImage *imageBuf = new QImage(pos.x1 - pos.x0, pos.y1 - pos.y0, QImage::Format_RGB888);
+	for(int y = pos.y0; y < pos.y1; y++) {
+		for(int x = pos.x0; x < pos.x1; x++) {
+			imageBuf->setPixel(x - pos.x0,y - pos.y0, image->pixel(x,y));
+			if (value < 1) {
+				image->setPixel(x, y, qRgb(0, 0, 0));
+			}
 		}
 	}
 
-	copyImageBuf(imageBuf);
+	int xCenter = pos.x0 + (pos.x1 - pos.x0) / 2;
+	int yCenter = pos.y0 + (pos.y1 - pos.y0) / 2;
+	int newX0 = xCenter - (xCenter - pos.x0) * value;
+	int newX1 = xCenter + (xCenter - pos.x0) * value;
+	int newY0 = yCenter - (yCenter - pos.y0) * value;
+	int newY1 = yCenter + (yCenter - pos.y0) * value;
+	newX0 = (newX0 < 0) ? 0 : (newX0 > image->width()) ? image->width() : newX0;
+	newX1 = (newX1 < 0) ? 0 : (newX1 > image->width()) ? image->width() : newX1;
+	newY0 = (newY0 < 0) ? 0 : (newY0 > image->height()) ? image->height() : newY0;
+	newY1 = (newY1 < 0) ? 0 : (newY1 > image->height()) ? image->height() : newY1;
+
+	for (int y = newY0; y < newY1; y++) {
+		for (int x = newX0; x < newX1; x++) {
+			double xOld = (x - xCenter) / value + xCenter - pos.x0;
+			double yOld = (y - yCenter) / value + yCenter - pos.y0;
+			if (xOld >= 0  && xOld < imageBuf->width() - 1 && yOld >= 0 && yOld < imageBuf->height() - 1) {
+				QRgb pix = bilinearInterpolation(xOld, yOld, imageBuf);
+				image->setPixel(x, y, pix);
+			}
+		}
+	}
 	delete(imageBuf);
 	imageLabel->setPixmap(QPixmap::fromImage(*image));
 }
 
+
+/* Action in menu for select by mouse. Work with class AreaImage *imageLabel. Set value also there. */
 void ImageProcessing::selectByMouse()
 {
 	bool selectByMouse = selectByMouseAct->isChecked();
@@ -845,6 +1015,8 @@ void ImageProcessing::selectByMouse()
 	}
 }
 
+
+/* Now in used by gauss, median etc. */
 void ImageProcessing::copyImageBuf(QImage *imgBuf)
 {
 	Position pos = imageLabel->points(image->width(), image->height());
@@ -855,11 +1027,15 @@ void ImageProcessing::copyImageBuf(QImage *imgBuf)
 	}
 }
 
+
+/* Need for creating effect of mirror image near the border */
 QRgb ImageProcessing::realPixel(int x, int y)
 {
 	return QRgb(image->pixel(realX(x), realY(y)));
 }
 
+
+/* for realPixel() */
 int ImageProcessing::realX(int x)
 {
 	if (x < 0) {
@@ -871,6 +1047,8 @@ int ImageProcessing::realX(int x)
 	}
 }
 
+
+/* for realPixel() */
 int ImageProcessing::realY(int y)
 {
 	if  (y < 0) {

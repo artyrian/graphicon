@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QLabel>
 #include <QRubberBand>
+#include <QRect>
+#include "finddialog.h"
 #define MAX_LENGHT_HISTOGRAM 256
 
 QT_BEGIN_NAMESPACE
@@ -82,7 +84,7 @@ private slots:
 
 private:
 	double **kernelGauss2D(double, double);
-	void gaussBlurSimple(double, double **);
+	void gaussBlurSimple(int, double **);
 	double *kernelGauss1D (double);
 	void gaussBlur(double);
 	void medianProcess(int);
@@ -94,7 +96,12 @@ private:
 	QRgb realPixel(int, int);
 	int realX(int);
 	int realY(int);
-	QRgb bilinearInterpolation(double, double);
+	QRgb bilinearInterpolation(double, double, QImage *);
+	QRect setBigRegion(int, int, double);
+	bool inRomb(int, int);
+	bool inSmallRegion(int, int);
+	void normalizeKernel2D(double **, int);
+	void deleteKernel2D(double **, int);
 
 	AreaImage *imageLabel;
 	QImage *image;
