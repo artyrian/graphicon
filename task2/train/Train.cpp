@@ -68,7 +68,18 @@ void InstancesData::trainData()
 
 void InstancesData::predictData()
 {
+	QDir dir;
+	dir.setFilter(QDir::Files);
+	dir.setSorting(QDir::Name);
+	list = dir.entryInfoList(QStringList() << "*.png");
 
+/*
+	for (int i = 0; i < list.size(); ++i) {
+		QFileInfo fileInfo = list.at(i);
+		QImage img(fileInfo.fileName());
+		std::cout << qPrintable(QString("%1").arg(fileInfo.fileName())) << std::endl;
+	}
+*/
 }
 
 /* */
