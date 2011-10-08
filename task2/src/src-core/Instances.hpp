@@ -9,6 +9,7 @@
 
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 
+#define STEP_X 5
 #define X_PIXEL 80
 #define Y_PIXEL 200
 #define X_BLOCK 10
@@ -43,10 +44,11 @@ public:
 	void setPathFileModel(char *);
 	size_t getInstancesNumber();
 	void incInstancesNumber();
+	void setInstancesNumber(int);
 	void trainPredictData();
 	void testPredictData();
 	void predictData();
-
+	void processInstance(int, int, int, int, QImage &);
 private:
 
 	void processIntensity(int, int, int, int, QImage &);
@@ -55,7 +57,7 @@ private:
 	void processAtan();
 
 	void processSign(std::vector<double> &);
-	void processInstance(int, int, int, int, QImage &);
+	int getDirection(double);
 	void positive(int, int, int, int, QImage &);
 	void negativeX(int &, int &, QImage &);
 	void negative(int, int, int, int, QImage &);

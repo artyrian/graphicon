@@ -8,6 +8,8 @@ const double coeffRed = 0.2125;
 const double coeffGreen = 0.7154;
 const double coeffBlue = 0.0721;
 
+const double PI = asin(1) * 2;
+
 int realX(int);
 int realY(int);
 
@@ -40,6 +42,12 @@ void InstancesData::incInstancesNumber()
 {
 	numberInstances++;
 }
+
+void InstancesData::setInstancesNumber(int i)
+{
+	numberInstances = i;
+}
+
 
 void InstancesData::trainPredictData()
 {
@@ -74,18 +82,28 @@ void InstancesData::trainPredictData()
 
 void InstancesData::testPredictData()
 {
-	QDir dir;
+	QDir dir(pathDir);
 	dir.setFilter(QDir::Files);
 	dir.setSorting(QDir::Name);
 	list = dir.entryInfoList(QStringList() << "*.png");
 
-/*
 	for (int i = 0; i < list.size(); ++i) {
 		QFileInfo fileInfo = list.at(i);
 		QImage img(fileInfo.fileName());
+
+		for (int x0 = 0; x0 < img.width() - X_PIXEL; x0 += 5) {
+			processInstance(x0, 0, x0 + X_PIXEL, Y_PIXEL, img);
+//			instancesLabels.push_back(1);
+			numberInstances++;
+		}
+
+
+/*
+		1) predict.
+		2) Here write to file;
+ */
 		std::cout << qPrintable(QString("%1").arg(fileInfo.fileName())) << std::endl;
 	}
-*/
 }
 
 void InstancesData::predictData()
@@ -161,11 +179,36 @@ void InstancesData::processSign(std::vector<double> &features)
 			int offset = NUM_SIGN * (y * X_BLOCK + x);
 			for (int i = 0; i < SIZE_BLOCK; i++) {
 				for (int j = 0; j < SIZE_BLOCK; j++) {
-					int sign = 5 ;//atan[x * SIZE_BLOCK + j][y * SIZE_BLOCK + i];
-					features[offset + sign] ++;
+					int sign = getDirection(atan[x * SIZE_BLOCK + j][y * SIZE_BLOCK + i]);
+					features[offset + sign - 1] ++;
 				}
 			}
 		}
+	}
+}
+
+int InstancesData::getDirection(double d)
+{
+	if (d >= 0 && d < double(PI)/4)
+		return 1;
+	else if (d >= double(PI)/4 && d < double(PI)/2)
+		return 2;
+	else if (d >= double(PI)/2 && d < double(3*PI)/4)
+		return 3;
+	else if (d >= double(3*PI)/4 && d <= double(PI))
+		return 4;
+	else if (d >= double(-PI) && d < double(-3*PI)/4)
+		return 5;
+	else if (d >= double(-3*PI)/4 && d < double(-PI)/2)
+		return 6;
+	else if (d >= double(-PI)/2 && d < double(-PI)/4)
+		return 7;
+	else if (d >= double(-PI)/4 && d < 0)
+		return 8;
+	else {
+		std::cout<< "double d:" << d << std::endl;
+		std::cerr << "Not allowed value of atan." << std::endl;
+		exit(1);
 	}
 }
 

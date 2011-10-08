@@ -5,8 +5,8 @@
 
 class Test {
 	InstancesData reader;
-//	char *pathDir;
-//	char *pathFileModel;
+	char *pathDir;
+	char *pathFileModel;
 
 	struct model* modelPedestrian;
 public:
