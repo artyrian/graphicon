@@ -12,7 +12,6 @@ class QScrollArea;
 class QScrollBar;
 QT_END_NAMESPACE
 
-//! [0]
 class ImageViewer : public QMainWindow
 {
     Q_OBJECT

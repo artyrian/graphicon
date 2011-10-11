@@ -1,6 +1,8 @@
 #ifndef TEST_HPP
 #define TEST_HPP
 
+#include <stdlib.h>
+#include <QString>
 #include "../src-core/Instances.hpp"
 
 class Test {
@@ -15,7 +17,8 @@ public:
 	char *imagesClassification();
 private:
 	void loadModelFromFile();
-	void classify();
+	void deleteDotPng (char *);
+	void classify(FILE *, char *);
 };
 
 #endif // TEST_HPP

@@ -5,8 +5,9 @@
 
 class Train {
 	InstancesData reader;
-
-	struct model* modelPedestrian;
+	char *pathDir;
+	char *pathFileLocations;
+	struct model *modelPedestrian;
 	struct problem prob;
 	struct parameter param;
 	char *pathFileModel;
@@ -16,6 +17,7 @@ public:
 	~Train();
 
 private:
+	void trainPredictData();
 	void fillModel();
 	void callTrain();
 	char *saveModelToFile();

@@ -71,55 +71,18 @@ void InstancesData::trainPredictData()
 
 		positive(x0, y0, x1, y1, img);
 
-		negativeX(x0, x1, img);
-		negative(x0, y0, x1, y1, img);
+//		negativeX(x0, x1, img);
+		for(int i = 0; i + X_PIXEL < x0; i += STEP_TRAIN_X) {
+			negative(i, y0, i + X_PIXEL, y1, img);
+		}
+		for(int i = x1; i + X_PIXEL < img.width(); i += STEP_TRAIN_X) {
+			negative(i, y0, i + X_PIXEL, y1, img);
+		}
 	}
 
 	fclose(fileLocations);
 	delete []pngName;
 	delete []fileName;
-}
-
-void InstancesData::testPredictData()
-{
-	QDir dir(pathDir);
-	dir.setFilter(QDir::Files);
-	dir.setSorting(QDir::Name);
-	list = dir.entryInfoList(QStringList() << "*.png");
-
-	for (int i = 0; i < list.size(); ++i) {
-		QFileInfo fileInfo = list.at(i);
-		QImage img(fileInfo.fileName());
-
-		for (int x0 = 0; x0 < img.width() - X_PIXEL; x0 += 5) {
-			processInstance(x0, 0, x0 + X_PIXEL, Y_PIXEL, img);
-//			instancesLabels.push_back(1);
-			numberInstances++;
-		}
-
-
-/*
-		1) predict.
-		2) Here write to file;
- */
-		std::cout << qPrintable(QString("%1").arg(fileInfo.fileName())) << std::endl;
-	}
-}
-
-void InstancesData::predictData()
-{
-	QDir dir;
-	dir.setFilter(QDir::Files);
-	dir.setSorting(QDir::Name);
-	list = dir.entryInfoList(QStringList() << "*.png");
-
-/*
-	for (int i = 0; i < list.size(); ++i) {
-		QFileInfo fileInfo = list.at(i);
-		QImage img(fileInfo.fileName());
-		std::cout << qPrintable(QString("%1").arg(fileInfo.fileName())) << std::endl;
-	}
-*/
 }
 
 

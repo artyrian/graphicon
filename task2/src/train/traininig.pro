@@ -9,6 +9,7 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 
+
 SOURCES += \
 	../src-core/liblinear-1.8/linear.cpp \
 	../src-core/liblinear-1.8/tron.cpp \

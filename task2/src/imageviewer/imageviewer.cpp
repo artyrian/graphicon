@@ -70,7 +70,7 @@ void ImageViewer::detect()
 	QImage img(pathImage);
 
 	reader.setInstancesNumber(0);
-	for (int x0 = 0; x0 < img.width() - X_PIXEL; x0 += STEP_X) {
+	for (int x0 = 0; x0 < img.width() - X_PIXEL; x0 += STEP_X_DETECTING) {
 		reader.processInstance(x0, 0, x0 + X_PIXEL, Y_PIXEL, img);
 		reader.incInstancesNumber();
 	}
@@ -117,13 +117,13 @@ void ImageViewer::classify(QImage &img)
 void ImageViewer::detectedPedestrian(int i, QImage &img)
 {
 	for(int y = 0; y < img.height(); y++) {
-		img.setPixel(STEP_X * i, y, qRgb(255,0,0));
+		img.setPixel(STEP_X_DETECTING * i, y, qRgb(255,0,0));
 	}
 	for(int y = 0; y < img.height(); y++) {
-		img.setPixel(STEP_X * i + X_PIXEL, y, qRgb(255,0,0));
+		img.setPixel(STEP_X_DETECTING * i + X_PIXEL, y, qRgb(255,0,0));
 	}
 	imageLabel->setPixmap(QPixmap::fromImage(img));
-	std::cout<< "Found pedestrian at " << STEP_X * i << std::endl;
+	std::cout<< "Found pedestrian at " << STEP_X_DETECTING * i << std::endl;
 }
 
 

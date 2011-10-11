@@ -1,12 +1,14 @@
 #include "Train.hpp"
 #include <iostream>
 
-Train::Train(char *argv1, char *argv2)
+Train::Train(char *arg1, char *arg2)
 	: reader ()
 {
-	reader.setPathDir(argv1);
-	reader.setPathFileLocations(argv2);
-	reader.trainPredictData();
+	pathDir = arg1;
+	pathFileLocations = arg2;
+//	reader.setPathDir(arg1);
+//	reader.setPathFileLocations(arg2);
+//	reader.trainPredictData();
 }
 
 Train::~Train()
@@ -82,10 +84,53 @@ void Train:: freeModel()
 
 char *Train::qualifierTraining()
 {
+	trainPredictData();
 	fillModel();
 	callTrain();
 	char *pathFileModel = saveModelToFile();
 	freeModel();
 
 	return pathFileModel;
+}
+
+
+void Train::trainPredictData()
+{
+	int rStatus;
+	char *pngName = new char [SIZE_STRING_NAME];
+	char *fileName = new char [strlen(pathDir) + SIZE_STRING_NAME + strlen(".png")];
+	int x0, y0, x1, y1;
+
+	FILE *fileLocations = fopen(pathFileLocations, "r");
+	while ((rStatus = fscanf(fileLocations, "%s%d%d%d%d", pngName, &y0, &x0, &y1, &x1)) != EOF)
+	{
+		if (rStatus != NUM_PARAMETERS) {
+			fprintf(stderr, "Can't read all option for current png.\n");
+			exit(1);
+		}
+		strcpy(fileName, pathDir);
+		strcat(fileName, pngName);
+		strcat(fileName, ".png");
+
+		QImage img(fileName);
+
+		reader.positive(x0, y0, x1, y1, img);
+
+/*
+		reader.negativeX(x0, x1, img);
+		reader.negative(x0, y0, x1, y1, img);
+*/
+
+		for(int i = 0; i + X_PIXEL < x0; i += STEP_TRAIN_X) {
+			reader.negative(i, y0, i + X_PIXEL, y1, img);
+		}
+		for(int i = x1; i + X_PIXEL < img.width(); i += STEP_TRAIN_X) {
+			reader.negative(i, y0, i + X_PIXEL, y1, img);
+		}
+
+	}
+
+	fclose(fileLocations);
+	delete []pngName;
+	delete []fileName;
 }
