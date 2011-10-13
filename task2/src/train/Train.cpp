@@ -134,3 +134,9 @@ void Train::trainPredictData()
 	delete []pngName;
 	delete []fileName;
 }
+
+void Train::bootstrapping()
+{
+	// recognize
+	// train again.
+}

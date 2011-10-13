@@ -142,8 +142,10 @@ void InstancesData::processSign(std::vector<double> &features)
 			int offset = NUM_SIGN * (y * X_BLOCK + x);
 			for (int i = 0; i < SIZE_BLOCK; i++) {
 				for (int j = 0; j < SIZE_BLOCK; j++) {
-					int sign = getDirection(atan[x * SIZE_BLOCK + j][y * SIZE_BLOCK + i]);
-					features[offset + sign - 1] ++;
+					//int sign = getDirection(atan[x * SIZE_BLOCK + j][y * SIZE_BLOCK + i]);
+					//++features[((int)trunc(grad_angle[i][y]* 4 / M_PI + 4)%8) + offset];
+					features[offset + ((int)trunc(atan[x*SIZE_BLOCK +j][y * SIZE_BLOCK + i] * 4 / PI + 4)%8)];
+					//features[offset + sign - 1] ++;
 				}
 			}
 		}

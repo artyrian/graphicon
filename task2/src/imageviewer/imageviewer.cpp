@@ -21,6 +21,7 @@ ImageViewer::ImageViewer()
     createMenus();
 
     statusImage = false;
+    statusFile = false;
 
     setWindowTitle(tr("Image Viewer"));
     resize(400, 250);
@@ -45,6 +46,7 @@ void ImageViewer::openImage()
 	pathImage = new char [strlen(fileName.toAscii()) + 1];
 	strcpy(pathImage, fileName.toAscii());
     }
+    detectAct->setEnabled(statusImage && statusFile);
 }
 
 void ImageViewer::openFile()
@@ -59,8 +61,9 @@ void ImageViewer::openFile()
 
 	pathFileModel = new char [strlen(fileName.toAscii()) + 1];
 	strcpy(pathFileModel, fileName.toAscii());
+	statusFile = true;
 
-    detectAct->setEnabled(true && statusImage);
+    detectAct->setEnabled(statusImage && statusFile);
 }
 
 void ImageViewer::detect()

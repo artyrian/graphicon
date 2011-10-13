@@ -43,6 +43,7 @@ private:
     QAction *exitAct;
     QMenu *fileMenu;
     bool statusImage;
+    bool statusFile;
     char *pathImage;
     char *pathFileModel;
 

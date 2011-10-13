@@ -19,6 +19,7 @@ private:
 	void loadModelFromFile();
 	void deleteDotPng (char *);
 	void classify(FILE *, char *);
+	void suppression ();
 };
 
 #endif // TEST_HPP

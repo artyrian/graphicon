@@ -10,6 +10,7 @@ int main(int argc, char **argv)
 
 	Train train(argv[1], argv[2]);
 	train.qualifierTraining();
+	train.bootstrapping();
 
 	return 0;
 }

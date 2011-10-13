@@ -11,6 +11,8 @@ QualityClassification::QualityClassification(char *arg1, char *arg2)
 {
 	pathOwnLocations = arg1;
 	pathRightLocations = arg2;
+	det = 0;
+	gt = 0;
 }
 
 
@@ -19,46 +21,48 @@ void QualityClassification::evaluateResult()
 	std::vector<Item> vOwnLocations;
 	std::vector<Item> vRightLocations;
 	readFileLocations(pathOwnLocations, vOwnLocations);
-	readFileRightLocations(pathRightLocations, vRightLocations);
+	readFileLocations(pathRightLocations, vRightLocations);
 
-	int tp = 0, fp = 0, det = 0;
-	int gt = 0, tpShift = 0;
+	int tp = 0, fp = 0;
+	int tpShift = 0;
 	float recall, precision;
 
-	while (vRightLocations.size() > 0) {
-		Item item = vRightLocations.back();
-		vRightLocations.pop_back();
-		gt++;
-		std::vector<Item>::iterator cur = findPosition(item.name, vOwnLocations);
-		if (cur == vOwnLocations.end()) {
-			std::cout << "Pedestrian not found. Next iteration." << std::endl;
-		} else {
-			bool usedRightLocation = false;
-			while (cur->medianX.size() > 0) {
-				int pos_cur = cur->medianX.back();
-				cur->medianX.pop_back();
-				bool inArea = false;
-				if (isInArea(pos_cur, item.medianX[0])) {
-						inArea = true;
-						usedRightLocation = true;
-				}
-				if (inArea) {
+
+	for(std::vector<Item>::iterator i = vOwnLocations.begin(); i != vOwnLocations.end(); i++) {
+		std::vector<Item>::iterator cur = findPosition(i->name, vRightLocations);
+		for(std::vector<int>::iterator k = i->medianX.begin(); k != i->medianX.end(); k++) {
+			det++;
+			for(std::vector<int>::iterator j = cur->medianX.begin(); j != cur->medianX.end(); j++) {
+				if(isInArea(*k, *j)) {
 					tp++;
-				} else {
-					fp++;
 				}
-			}
-//			vOwnLocations.erase(cur);
-			if (usedRightLocation) {
-				tpShift++;
 			}
 		}
 	}
-	det = tp + fp;
+
+
+	for(std::vector<Item>::iterator i = vRightLocations.begin(); i != vRightLocations.end(); i++) {
+		std::vector<Item>::iterator cur = findPosition(i->name, vOwnLocations);
+		if (cur != vOwnLocations.end()) {
+			for(std::vector<int>::iterator k = i->medianX.begin(); k != i->medianX.end(); k++) {
+				gt++;
+				for(std::vector<int>::iterator j = cur->medianX.begin(); j != cur->medianX.end(); j++) {
+					if(isInArea(*j, *k)) {
+						tpShift++;
+						break;
+					}
+				}
+			}
+		} else {
+			gt++;
+		}
+	}
+
+	fp = det - tp;
 	recall = (double) tpShift / gt;
 	precision = (double) tp / det;
-	printf ("recall: %.5f%% (tp':%d. gt:%d)\n", recall * 100, tpShift, gt);
-	printf ("precision: %.5f%% (tp:%d. fp:%d)\n", precision * 100, tp, fp);
+	printf ("\n\nrecall: %.5f%% (tp':%d. gt:%d)\n", recall * 100, tpShift, gt);
+	printf ("precision: %.5f%% (tp:%d. fp:%d. det:%d)\n", precision * 100, tp, fp, det);
 }
 
 
@@ -77,12 +81,13 @@ std::vector<Item>::iterator QualityClassification::findPosition(char *name, std:
 
 int QualityClassification::isInArea(int x, int x0)
 {
-	if ((x >= x0 - X_PIXEL/2) && x <= x0 + X_PIXEL/2) {
+	if ((x > x0 - X_PIXEL/2) && x < x0 + X_PIXEL/2) {
 		return true;
 	} else {
 		return false;
 	}
 }
+
 
 void QualityClassification::deleteName(std::vector<Item> &vLocations)
 {
@@ -116,7 +121,6 @@ void QualityClassification::readFileLocations(char *pathLocations, std::vector<I
 			vLocations.push_back(item);
 		//	delete [] item.name;
 		}
-
 	}
 	fclose(fileLocations);
 }
@@ -141,6 +145,7 @@ void QualityClassification::readFileRightLocations(char *pathLocations, std::vec
 		strcpy(item.name, pngName);
 		item.medianX.push_back(x0 + X_PIXEL / 2);
 		vLocations.push_back(item);
+		gt++;
 	}
 	fclose(fileLocations);
 }

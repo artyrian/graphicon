@@ -14,6 +14,7 @@ class Train {
 public:
 	Train(char *, char *);
 	char *qualifierTraining();
+	void bootstrapping();
 	~Train();
 
 private:

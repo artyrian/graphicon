@@ -26,9 +26,7 @@ char *Test::imagesClassification()
 
 	std::cout << "It's work. Wait sometime..." <<std::endl;
 	for (int i = 0; i < list.size(); ++i) {
-		QString pathPng(pathDir);
-		pathPng.append(list.at(i).fileName());
-		QImage img(pathPng);
+		QImage img(list.at(i).filePath());
 
 		reader.setInstancesNumber(0);
 		for (int x0 = 0; x0 < img.width() - X_PIXEL; x0 += STEP_X_DETECTING) {
@@ -71,6 +69,7 @@ void Test::classify(FILE *fileLocations, char *name)
 {
 	struct feature_node* x = Malloc(struct feature_node, NUM_FEATURES+1);
 	x[NUM_FEATURES].index = -1;  // -1 marks the end of list
+	double prob_estimates[1];
 
 	for (size_t i = 0; i < reader.getInstancesNumber(); i++) {
 		for (int j = 0; j < NUM_FEATURES; j++) {
@@ -81,8 +80,17 @@ void Test::classify(FILE *fileLocations, char *name)
 //		std::cout  << predict_label;
 		if (predict_label == 1) {
 			fprintf(fileLocations, "%s\t%d\t%d\t%d\t%d\n", name, 0, STEP_X_DETECTING * i, 200, STEP_X_DETECTING  *i + X_PIXEL);
+			//predict_values(modelPedestrian, x, prob_estimates);
+			//std::cout << prob_estimates[0] << " "; // confidence for the first class (+1, in our case)
+			//suppression();
 		}
 	}
 	reader.instancesFeatures.clear();
 	free(x);
+}
+
+
+void Test::suppression()
+{
+
 }

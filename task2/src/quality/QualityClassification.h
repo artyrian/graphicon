@@ -11,7 +11,7 @@ struct Item {
 class QualityClassification {
 	char *pathOwnLocations;
 	char *pathRightLocations;
-	int GT;
+	int det, gt;
 public:
 	QualityClassification(char *, char *);
 	void readFileLocations(char *, std::vector<Item> &);
