@@ -31,6 +31,9 @@ private:
     void loadModelFromFile();
     void classify(QImage &);
     void detectedPedestrian(int, QImage &);
+    void suppression (QImage &img,  std::vector<double> &vect);
+    void findMaximum(std::vector<double> &vect, double *max, int *max_index);
+    void nullInArea(std::vector<double> &vect, int index);
 
     QScrollArea *scrollArea;
     QLabel *imageLabel;

@@ -1,14 +1,15 @@
 #include "Train.hpp"
 #include <iostream>
+#include <string>
+#include <map>
+
+#include "../test/Test.hpp"
 
 Train::Train(char *arg1, char *arg2)
 	: reader ()
 {
 	pathDir = arg1;
 	pathFileLocations = arg2;
-//	reader.setPathDir(arg1);
-//	reader.setPathFileLocations(arg2);
-//	reader.trainPredictData();
 }
 
 Train::~Train()
@@ -93,12 +94,11 @@ char *Train::qualifierTraining()
 	return pathFileModel;
 }
 
-
 void Train::trainPredictData()
 {
 	int rStatus;
 	char *pngName = new char [SIZE_STRING_NAME];
-	char *fileName = new char [strlen(pathDir) + SIZE_STRING_NAME + strlen(".png")];
+	struct ItemPng item;
 	int x0, y0, x1, y1;
 
 	FILE *fileLocations = fopen(pathFileLocations, "r");
@@ -108,35 +108,88 @@ void Train::trainPredictData()
 			fprintf(stderr, "Can't read all option for current png.\n");
 			exit(1);
 		}
-		strcpy(fileName, pathDir);
-		strcat(fileName, pngName);
-		strcat(fileName, ".png");
+		std::string fileName;
+		fileName = fileName.append(pathDir).append(pngName).append(".png");
 
-		QImage img(fileName);
+		item.name = pngName;
+		item.x = x0;
+		vectP.push_back(item);
+
+		QImage img(fileName.c_str());
 
 		reader.positive(x0, y0, x1, y1, img);
 
+		reader.negativeX(x0, x1, img);
+		reader.negative(x0, y0, x1, y1, img);
 /*
 		reader.negativeX(x0, x1, img);
 		reader.negative(x0, y0, x1, y1, img);
 */
-
+/*
 		for(int i = 0; i + X_PIXEL < x0; i += STEP_TRAIN_X) {
 			reader.negative(i, y0, i + X_PIXEL, y1, img);
 		}
 		for(int i = x1; i + X_PIXEL < img.width(); i += STEP_TRAIN_X) {
 			reader.negative(i, y0, i + X_PIXEL, y1, img);
 		}
+*/
 
 	}
 
 	fclose(fileLocations);
 	delete []pngName;
-	delete []fileName;
 }
 
-void Train::bootstrapping()
+void Train::trainPredictData2(std::vector<ItemPng> &vect)
 {
-	// recognize
-	// train again.
+	for (uint i = 0; i < vect.size(); i++) {
+		std::string fileName;
+		fileName = fileName.append(pathDir).append(vect[i].name).append(".png");
+
+		QImage img(fileName.c_str());
+
+		reader.negative(vect[i].x, 0, vect[i].x + X_PIXEL, Y_PIXEL, img);
+	}
+}
+
+
+int isInArea(int x, int x0)
+{
+	if ((x > x0 - X_PIXEL/2) && x < x0 + X_PIXEL/2) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+void Train::createNegativeVector(std::vector<ItemPng> &vectN, std::vector<ItemPng> &vectNP)
+{
+	for (uint i = 0; i < vectNP.size(); i++) {
+		bool positive = false;
+		for (uint j = 0; j < vectP.size(); j++) {
+			if ((vectNP[i].name == vectP[j].name) && isInArea(vectNP[i].x, vectP[j].x)) {
+				positive = true;
+			}
+		}
+		if (positive == false) {
+			vectN.push_back(vectNP[i]);
+		}
+	}
+}
+
+
+char *Train::bootstrapping()
+{
+	Test test(pathDir, pathFileModel);
+	test.imagesClassification();
+
+	trainPredictData();
+	std::vector<ItemPng> negVector;
+	createNegativeVector(negVector, test.vectNPLocations);
+	trainPredictData2(negVector);
+	fillModel();
+	callTrain();
+	char *pathFileModel = saveModelToFile();
+	freeModel();
+	return pathFileModel;
 }

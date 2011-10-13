@@ -1,5 +1,6 @@
 #include "Test.hpp"
 #include <iostream>
+#include <string>
 
 #include <QImage>
 
@@ -8,21 +9,17 @@ Test::Test(char *argv1, char *argv2)
 {
 	pathDir = argv1;
 	pathFileModel = argv2;
-//	reader.setPathDir(argv1);
-//	reader.setPathFileModel(argv2);
-//	reader.testPredictData();
 }
 
-char *Test::imagesClassification()
+const char *Test::imagesClassification()
 {
 	loadModelFromFile();
 	QDir dir(pathDir);
 	dir.setFilter(QDir::Files);
 	dir.setSorting(QDir::Name);
 	QFileInfoList list = dir.entryInfoList(QStringList() << "*.png");
-	char *pathFileLocations = new char[40];
-	strcpy(pathFileLocations, "test-own-processed.idl");
-	FILE *fileLocations = fopen(pathFileLocations, "w");
+	std::string pathFileLoc(pathLocations);
+	FILE *fileLocations = fopen(pathFileLoc.c_str(), "w");
 
 	std::cout << "It's work. Wait sometime..." <<std::endl;
 	for (int i = 0; i < list.size(); ++i) {
@@ -34,27 +31,14 @@ char *Test::imagesClassification()
 			reader.incInstancesNumber();
 		}
 
-//		std::cout << qPrintable(QString("%1").arg(pathPng)) << "[" << img.width() << "] : ";
-		char name[20];
-		strcpy (name, list.at(i).fileName().toAscii().data());
-		deleteDotPng(name);
-		classify(fileLocations, name);
+		std::string name(list.at(i).fileName().toStdString());
+		classify(fileLocations, name.substr(0, name.length() - 4).c_str());
 	}
 
 	fclose(fileLocations);
-	return pathFileLocations;
+	return pathFileLoc.c_str();
 }
 
-void Test::deleteDotPng(char *name)
-{
-	for (uint i = 0; i < strlen(name); i++) {
-		if (name[i] == '.') {
-			name[i] = '\0';
-			break;
-		}
-	}
-
-}
 
 void Test::loadModelFromFile()
 {
@@ -65,10 +49,11 @@ void Test::loadModelFromFile()
 	}
 }
 
-void Test::classify(FILE *fileLocations, char *name)
+void Test::classify(FILE *fileLocations, const char *name)
 {
 	struct feature_node* x = Malloc(struct feature_node, NUM_FEATURES+1);
 	x[NUM_FEATURES].index = -1;  // -1 marks the end of list
+	std::vector<double> vPredictValues;
 	double prob_estimates[1];
 
 	for (size_t i = 0; i < reader.getInstancesNumber(); i++) {
@@ -77,20 +62,63 @@ void Test::classify(FILE *fileLocations, char *name)
 			x[j].value = reader.instancesFeatures[i][j];
 		}
 		int predict_label = predict(modelPedestrian, x);
-//		std::cout  << predict_label;
 		if (predict_label == 1) {
-			fprintf(fileLocations, "%s\t%d\t%d\t%d\t%d\n", name, 0, STEP_X_DETECTING * i, 200, STEP_X_DETECTING  *i + X_PIXEL);
-			//predict_values(modelPedestrian, x, prob_estimates);
-			//std::cout << prob_estimates[0] << " "; // confidence for the first class (+1, in our case)
-			//suppression();
+			predict_values(modelPedestrian, x, prob_estimates);
+	//		fprintf(fileLocations, "%s\t%d\t%d\t%d\t%d\n", name, 0, STEP_X_DETECTING * i, 200, STEP_X_DETECTING * i + X_PIXEL);
+		} else {
+			prob_estimates[0] = 0;
 		}
+		vPredictValues.push_back(prob_estimates[0]);
 	}
+	suppression(fileLocations, name, vPredictValues);
 	reader.instancesFeatures.clear();
 	free(x);
 }
 
 
-void Test::suppression()
+void Test::suppression(FILE *fileLocations, const char *namePng, std::vector<double> &vect)
 {
+	double max = vect[0];
+	int max_index = 0;
 
+	findMaximum(vect, &max, &max_index);
+	while (max != 0) {
+		writeToFile(fileLocations, namePng, max_index);
+		vect[max_index] = 0;
+		nullInArea(vect, max_index);
+		max = vect[0];
+		max_index = 0;
+		findMaximum(vect, &max, &max_index);
+	}
+}
+
+void Test::findMaximum(std::vector<double> &vect, double *max, int *max_index)
+{
+	for(uint i = 0; i < vect.size(); i++) {
+		if (vect[i] > *max) {
+			*max = vect[i];
+			*max_index = i;
+		}
+	}
+}
+
+
+void Test::writeToFile(FILE *fileLocations, const char *name, int index)
+{
+	fprintf(fileLocations, "%s\t%d\t%d\t%d\t%d\n", name, 0, STEP_X_DETECTING * index, 200, STEP_X_DETECTING * index + X_PIXEL);
+	ItemPng item;
+	item.name = name;
+	item.x = STEP_X_DETECTING * index;
+	vectNPLocations.push_back(item);
+}
+
+
+void Test::nullInArea(std::vector<double> &vect, int index)
+{
+	int localArea = X_PIXEL / (2 * STEP_X_DETECTING);
+	for(int i = - localArea; i <= localArea;  i++) {
+		if ((index + i >= 0) && (index + i < (int)vect.size())) {
+			vect[index + i] = 0;
+		}
+	}
 }

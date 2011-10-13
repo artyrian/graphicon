@@ -18,21 +18,6 @@ InstancesData::InstancesData()
 	numberInstances = 0;
 }
 
-void InstancesData::setPathDir(char *arg)
-{
-	pathDir = arg;
-}
-
-void InstancesData::setPathFileLocations(char *arg)
-{
-	pathFileLocations = arg;
-}
-
-void InstancesData::setPathFileModel(char *arg)
-{
-	pathFileModel = arg;
-}
-
 size_t InstancesData::getInstancesNumber()
 {
 	return numberInstances;
@@ -46,43 +31,6 @@ void InstancesData::incInstancesNumber()
 void InstancesData::setInstancesNumber(int i)
 {
 	numberInstances = i;
-}
-
-
-void InstancesData::trainPredictData()
-{
-	int rStatus;
-	char *pngName = new char [SIZE_STRING_NAME];
-	char *fileName = new char [strlen(pathDir) + SIZE_STRING_NAME + strlen(".png")];
-	int x0, y0, x1, y1;
-
-	FILE *fileLocations = fopen(pathFileLocations, "r");
-	while ((rStatus = fscanf(fileLocations, "%s%d%d%d%d", pngName, &y0, &x0, &y1, &x1)) != EOF)
-	{
-		if (rStatus != NUM_PARAMETERS) {
-			fprintf(stderr, "Can't read all option for current png.\n");
-			exit(1);
-		}
-		strcpy(fileName, pathDir);
-		strcat(fileName, pngName);
-		strcat(fileName, ".png");
-
-		QImage img(fileName);
-
-		positive(x0, y0, x1, y1, img);
-
-//		negativeX(x0, x1, img);
-		for(int i = 0; i + X_PIXEL < x0; i += STEP_TRAIN_X) {
-			negative(i, y0, i + X_PIXEL, y1, img);
-		}
-		for(int i = x1; i + X_PIXEL < img.width(); i += STEP_TRAIN_X) {
-			negative(i, y0, i + X_PIXEL, y1, img);
-		}
-	}
-
-	fclose(fileLocations);
-	delete []pngName;
-	delete []fileName;
 }
 
 
@@ -102,12 +50,12 @@ void InstancesData::processGradientX()
 {
 	for(int y = 0; y < Y_PIXEL; y++) {
 		for(int x = 0; x < X_PIXEL; x++) {
-			gradientX[x][y] = (-1) * intensity[realX(x-1)][realY(y-1)] +
-					2 * intensity[realX(x)][realY(y-1)] +
-					(-1) * intensity[realX(x+1)][realY(y-1)] +
-					(-1) * intensity[realX(x-1)][realY(y+1)] +
-					2 * intensity[realX(x)][realY(y+1)] +
-					(-1) * intensity[realX(x+1)][realY(y+1)];
+			gradientX[x][y] = (-1)	* intensity[realX(x-1)][realY(y-1)] +
+					(-2)	* intensity[realX(x-1)][realY(y)] +
+					(-1)	* intensity[realX(x-1)][realY(y+1)] +
+					(1)	* intensity[realX(x+1)][realY(y-1)] +
+					(2)	* intensity[realX(x+1)][realY(y)] +
+					(1)	* intensity[realX(x+1)][realY(y+1)];
 		}
 	}
 }
@@ -116,12 +64,12 @@ void InstancesData::processGradientY()
 {
 	for(int y = 0; y < Y_PIXEL; y++) {
 		for(int x = 0; x < X_PIXEL; x++) {
-			gradientY[x][y] = (-1) * intensity[realX(x-1)][realY(y-1)] +
-					2 * intensity[realX(x-1)][realY(y)] +
-					(-1) * intensity[realX(x-11)][realY(y+1)] +
-					(-1) * intensity[realX(x+1)][realY(y-1)] +
-					2 * intensity[realX(x+1)][realY(y)] +
-					(-1) * intensity[realX(x+1)][realY(y+1)];
+			gradientY[x][y] = (-1)	* intensity[realX(x-1)][realY(y-1)] +
+					(-2)	* intensity[realX(x)][realY(y-1)] +
+					(-1)	* intensity[realX(x+1)][realY(y-1)] +
+					(1)	* intensity[realX(x-1)][realY(y+1)] +
+					(2)	* intensity[realX(x)][realY(y+1)] +
+					(1)	* intensity[realX(x)][realY(y+1)];
 		}
 	}
 }
@@ -142,10 +90,10 @@ void InstancesData::processSign(std::vector<double> &features)
 			int offset = NUM_SIGN * (y * X_BLOCK + x);
 			for (int i = 0; i < SIZE_BLOCK; i++) {
 				for (int j = 0; j < SIZE_BLOCK; j++) {
-					//int sign = getDirection(atan[x * SIZE_BLOCK + j][y * SIZE_BLOCK + i]);
-					//++features[((int)trunc(grad_angle[i][y]* 4 / M_PI + 4)%8) + offset];
-					features[offset + ((int)trunc(atan[x*SIZE_BLOCK +j][y * SIZE_BLOCK + i] * 4 / PI + 4)%8)];
-					//features[offset + sign - 1] ++;
+					int sign = getDirection(atan[x * SIZE_BLOCK + j][y * SIZE_BLOCK + i]);
+					//int sign = trunc(atan[x * SIZE_BLOCK + j][y * SIZE_BLOCK + i]* 4/ M_PI);
+					//sign = (sign < 0)? sign + 8 : sign;
+					features[offset + sign - 1] ++;
 				}
 			}
 		}

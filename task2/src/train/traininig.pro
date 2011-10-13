@@ -19,8 +19,10 @@ SOURCES += \
 	../src-core/liblinear-1.8/blas/dnrm2.c \
 	Train.cpp \
 	training.cpp \
-	../src-core/Instances.cpp
+	../src-core/Instances.cpp \
+	../test/Test.cpp
 
 HEADERS += \
 	Train.hpp \
-	../src-core/Instances.hpp
+	../src-core/Instances.hpp \
+	../test/Test.hpp

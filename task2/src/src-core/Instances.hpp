@@ -24,6 +24,11 @@
 
 const char NameFileModel[]  = "model.txt";
 
+struct ItemPng {
+	std::string name;
+	int x;
+};
+
 class InstancesData {
 	char *pathFileLocations;
 	char *pathFileModel;
@@ -41,9 +46,6 @@ public:
 	std::vector<int> instancesLabels;
 
 	InstancesData();
-	void setPathDir(char *);
-	void setPathFileLocations(char *);
-	void setPathFileModel(char *);
 	size_t getInstancesNumber();
 	void incInstancesNumber();
 	void setInstancesNumber(int);

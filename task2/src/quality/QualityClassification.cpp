@@ -77,22 +77,12 @@ std::vector<Item>::iterator QualityClassification::findPosition(char *name, std:
 	return vect.end();
 }
 
-
-
 int QualityClassification::isInArea(int x, int x0)
 {
 	if ((x > x0 - X_PIXEL/2) && x < x0 + X_PIXEL/2) {
 		return true;
 	} else {
 		return false;
-	}
-}
-
-
-void QualityClassification::deleteName(std::vector<Item> &vLocations)
-{
-	for (uint i = 0; i < vLocations.size(); i++) {
-		delete vLocations[i].name;
 	}
 }
 
@@ -119,42 +109,7 @@ void QualityClassification::readFileLocations(char *pathLocations, std::vector<I
 			strcpy(item.name, pngName);
 			item.medianX.push_back(x0 + X_PIXEL / 2);
 			vLocations.push_back(item);
-		//	delete [] item.name;
 		}
 	}
 	fclose(fileLocations);
-}
-
-void QualityClassification::readFileRightLocations(char *pathLocations, std::vector<Item> &vLocations)
-{
-	int rStatus;
-	char pngName[20];
-	int x0, y0, x1, y1;
-	FILE *fileLocations = fopen(pathLocations, "r");
-
-
-	while ((rStatus = fscanf(fileLocations, "%s%d%d%d%d", pngName, &y0, &x0, &y1, &x1)) != EOF)
-	{
-		if (rStatus != 5) {
-			fprintf(stderr, "Can't read all options for current png.\n");
-			exit(1);
-		}
-
-		struct Item item;
-		item.name = new char [strlen(pngName)+1];
-		strcpy(item.name, pngName);
-		item.medianX.push_back(x0 + X_PIXEL / 2);
-		vLocations.push_back(item);
-		gt++;
-	}
-	fclose(fileLocations);
-}
-
-
-void printVector(std::vector<Item> vect)
-{
-	for (uint i = 0; i < vect.size(); i++) {
-		printf ("%s ", vect[i].name);
-	}
-	printf("\n");
 }
