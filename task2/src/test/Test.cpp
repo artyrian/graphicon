@@ -26,7 +26,7 @@ const char *Test::imagesClassification()
 		QImage img(list.at(i).filePath());
 
 		reader.setInstancesNumber(0);
-		for (int x0 = 0; x0 < img.width() - X_PIXEL; x0 += STEP_X_DETECTING) {
+		for (int x0 = POS_START_DETECTING; x0 < img.width() - X_PIXEL; x0 += STEP_X_DETECTING) {
 			reader.processInstance(x0, 0, x0 + X_PIXEL, Y_PIXEL, img);
 			reader.incInstancesNumber();
 		}
@@ -51,7 +51,7 @@ void Test::loadModelFromFile()
 
 void Test::classify(FILE *fileLocations, const char *name)
 {
-	struct feature_node* x = Malloc(struct feature_node, NUM_FEATURES+1);
+	struct feature_node* x = Malloc(struct feature_node, NUM_FEATURES + 1);
 	x[NUM_FEATURES].index = -1;  // -1 marks the end of list
 	std::vector<double> vPredictValues;
 	double prob_estimates[1];
@@ -74,7 +74,6 @@ void Test::classify(FILE *fileLocations, const char *name)
 	reader.instancesFeatures.clear();
 	free(x);
 }
-
 
 void Test::suppression(FILE *fileLocations, const char *namePng, std::vector<double> &vect)
 {

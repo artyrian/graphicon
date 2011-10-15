@@ -4,9 +4,9 @@
 #include "../src-core/Instances.hpp"
 #include "string"
 
-
-
 class Train {
+	double valueC;
+
 	InstancesData reader;
 	char *pathDir;
 	char *pathFileLocations;
@@ -20,10 +20,12 @@ public:
 	char *qualifierTraining();
 	char *bootstrapping();
 	~Train();
+	void setC(double param);
 
 private:
 	void trainPredictData();
-	void createNegativeVector(std::vector<ItemPng> &vectN, std::vector<ItemPng> &vectNP);
+	void createPositiveVector(std::vector<ItemPng> &vectPos);
+	void createNegativeVector(std::vector<ItemPng> &vectN, std::vector<ItemPng> &vectPos, std::vector<ItemPng> &vectNP);
 	void trainPredictData2(std::vector<ItemPng> &vectN);
 	void fillModel();
 	void callTrain();

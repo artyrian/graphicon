@@ -11,16 +11,28 @@
 
 #define STEP_X 5
 #define STEP_X_DETECTING 5
-#define STEP_TRAIN_X 30
+#define POS_START_DETECTING 2
+#define STEP_TRAIN_X 25
+
 #define X_PIXEL 80
 #define Y_PIXEL 200
+
+#define SIZE_BLOCK 8
 #define X_BLOCK 10
 #define Y_BLOCK 25
-#define SIZE_BLOCK 8
+
+
+#define ORDER_APPROXIMATION 2
+#define STEP_APPROXIMATION 0.25
+
+#define NUM_SIGN 8 * (2 * ORDER_APPROXIMATION + 1) * 2
+// sign * (-0+) * (Re + Im)
+
+#define NUM_FEATURES X_BLOCK * Y_BLOCK * NUM_SIGN
+
 #define SIZE_STRING_NAME 24
-#define NUM_FEATURES 2000
 #define NUM_PARAMETERS 5
-#define NUM_SIGN 8
+
 
 const char NameFileModel[]  = "model.txt";
 
@@ -62,7 +74,7 @@ private:
 	void processGradientY();
 	void processAtan();
 
-	void processSign(std::vector<double> &);
+	void processSign();
 	int getDirection(double);
 };
 

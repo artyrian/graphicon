@@ -8,8 +8,16 @@
 Train::Train(char *arg1, char *arg2)
 	: reader ()
 {
+	valueC = 1;
+
 	pathDir = arg1;
 	pathFileLocations = arg2;
+}
+
+void Train::setC(double p)
+{
+	std::cout << "Set valueC: " << p << std::endl;
+	valueC = p;
 }
 
 Train::~Train()
@@ -21,8 +29,8 @@ Train::~Train()
 void Train::fillModel()
 {
 	prob.l = int(reader.getInstancesNumber()); // number of instances
-	prob.bias = 0; // bias feature
-	prob.n = NUM_FEATURES+1; // number of features + label
+	prob.bias = -1; // bias feature
+	prob.n = NUM_FEATURES;
 
 	prob.y = Malloc(int, prob.l); // allocate space for labels
 	prob.x = Malloc(struct feature_node *, prob.l); // allocate space for features
@@ -41,7 +49,7 @@ void Train::fillModel()
 
 	// default values of params. don't change them if not sure (unless param.C)
 	param.solver_type = L2R_L2LOSS_SVC_DUAL;
-	param.C = 1;
+	param.C = valueC;
 	param.eps = 1e-4;
 	param.nr_weight = 0;
 	param.weight_label = NULL;
@@ -118,40 +126,48 @@ void Train::trainPredictData()
 		QImage img(fileName.c_str());
 
 		reader.positive(x0, y0, x1, y1, img);
-
-		reader.negativeX(x0, x1, img);
-		reader.negative(x0, y0, x1, y1, img);
 /*
 		reader.negativeX(x0, x1, img);
 		reader.negative(x0, y0, x1, y1, img);
 */
-/*
 		for(int i = 0; i + X_PIXEL < x0; i += STEP_TRAIN_X) {
 			reader.negative(i, y0, i + X_PIXEL, y1, img);
 		}
 		for(int i = x1; i + X_PIXEL < img.width(); i += STEP_TRAIN_X) {
 			reader.negative(i, y0, i + X_PIXEL, y1, img);
 		}
-*/
-
 	}
 
 	fclose(fileLocations);
 	delete []pngName;
 }
 
-void Train::trainPredictData2(std::vector<ItemPng> &vect)
+void Train::trainPredictData2(std::vector<ItemPng> &vectN)
 {
-	for (uint i = 0; i < vect.size(); i++) {
+	std::cout << "Size of vector Negative: " << vectN.size() << std::endl;
+
+	for (uint i = 0; i < vectN.size(); i++) {
 		std::string fileName;
-		fileName = fileName.append(pathDir).append(vect[i].name).append(".png");
-
+		fileName = fileName.append(pathDir).append(vectN[i].name).append(".png");
 		QImage img(fileName.c_str());
-
-		reader.negative(vect[i].x, 0, vect[i].x + X_PIXEL, Y_PIXEL, img);
+		reader.negative(vectN[i].x, 0, vectN[i].x + X_PIXEL, Y_PIXEL, img);
 	}
-}
+/*
+	for (uint i = 0; i < vectP.size(); i++) {
+		std::string fileName;
+		fileName = fileName.append(pathDir).append(vectP[i].name).append(".png");
+		QImage img(fileName.c_str());
+		reader.positive(vectP[i].x, 0, vectP[i].x + X_PIXEL, Y_PIXEL, img);
 
+		for(int k = 0; k + X_PIXEL < vectP[i].x; k += STEP_TRAIN_X) {
+			reader.negative(i, 0, i + X_PIXEL, Y_PIXEL, img);
+		}
+		for(int k = vectP[i].x + X_PIXEL; k + X_PIXEL < img.width(); k += STEP_TRAIN_X) {
+			reader.negative(i, 0, i + X_PIXEL, Y_PIXEL, img);
+		}
+	}
+*/
+}
 
 int isInArea(int x, int x0)
 {
@@ -162,12 +178,38 @@ int isInArea(int x, int x0)
 	}
 }
 
-void Train::createNegativeVector(std::vector<ItemPng> &vectN, std::vector<ItemPng> &vectNP)
+void Train::createPositiveVector(std::vector<ItemPng> &vectPos)
 {
+	int rStatus;
+	char *pngName = new char [SIZE_STRING_NAME];
+	struct ItemPng item;
+	int x0, y0, x1, y1;
+	FILE *fileLocations = fopen(pathFileLocations, "r");
+	while ((rStatus = fscanf(fileLocations, "%s%d%d%d%d", pngName, &y0, &x0, &y1, &x1)) != EOF)
+	{
+		if (rStatus != NUM_PARAMETERS) {
+			fprintf(stderr, "Can't read all option for current png.\n");
+			exit(1);
+		}
+		item.name = pngName;
+		item.x = x0;
+		vectPos.push_back(item);
+	}
+
+	fclose(fileLocations);
+	delete []pngName;
+}
+
+void Train::createNegativeVector(std::vector<ItemPng> &vectN, std::vector<ItemPng> &vectPs, std::vector<ItemPng> &vectNP)
+{
+	std::cout << "Size of vector NP: " << vectNP.size() << std::endl;
+	std::cout << "Size of vector N(before start): " << vectN.size() << std::endl;
+	std::cout << "Size of vector P: " << vectP.size() << std::endl;
+
 	for (uint i = 0; i < vectNP.size(); i++) {
 		bool positive = false;
-		for (uint j = 0; j < vectP.size(); j++) {
-			if ((vectNP[i].name == vectP[j].name) && isInArea(vectNP[i].x, vectP[j].x)) {
+		for (uint j = 0; j < vectPs.size(); j++) {
+			if ((vectNP[i].name == vectPs[j].name) && isInArea(vectNP[i].x, vectPs[j].x)) {
 				positive = true;
 			}
 		}
@@ -183,10 +225,15 @@ char *Train::bootstrapping()
 	Test test(pathDir, pathFileModel);
 	test.imagesClassification();
 
-	trainPredictData();
-	std::vector<ItemPng> negVector;
-	createNegativeVector(negVector, test.vectNPLocations);
+	std::cout<< "reader.instances before bootsrt:" << reader.getInstancesNumber() << std::endl;
+
+	std::vector<ItemPng> negVector, posVector;
+	createPositiveVector(posVector);
+	createNegativeVector(negVector, posVector,  test.vectNPLocations);
 	trainPredictData2(negVector);
+
+	std::cout<< "reader.instances after bootsrt:" << reader.getInstancesNumber() << std::endl;
+
 	fillModel();
 	callTrain();
 	char *pathFileModel = saveModelToFile();

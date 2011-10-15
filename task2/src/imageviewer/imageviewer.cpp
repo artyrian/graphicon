@@ -124,7 +124,6 @@ void ImageViewer::detectedPedestrian(int i, QImage &img)
 		img.setPixel(STEP_X_DETECTING * i + X_PIXEL, y, qRgb(0,255,0));
 	}
 	imageLabel->setPixmap(QPixmap::fromImage(img));
-	std::cout<< "Found pedestrian at " << STEP_X_DETECTING * i << std::endl;
 }
 
 

@@ -1,5 +1,5 @@
 #include "Train.hpp"
-
+#include <stdio.h>
 
 int main(int argc, char **argv)
 {
@@ -9,8 +9,11 @@ int main(int argc, char **argv)
 	}
 
 	Train train(argv[1], argv[2]);
+//	train.setC(atof(argv[3]));
 	train.qualifierTraining();
-//	train.bootstrapping();
+	printf("Send any key when ready to bootstrapping.\n");
+	getchar();
+	train.bootstrapping();
 
 	return 0;
 }

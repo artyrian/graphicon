@@ -15,7 +15,6 @@ QualityClassification::QualityClassification(char *arg1, char *arg2)
 	gt = 0;
 }
 
-
 void QualityClassification::evaluateResult()
 {
 	std::vector<Item> vOwnLocations;
@@ -25,8 +24,7 @@ void QualityClassification::evaluateResult()
 
 	int tp = 0, fp = 0;
 	int tpShift = 0;
-	float recall, precision;
-
+	float recall, precision, fMeasure;
 
 	for(std::vector<Item>::iterator i = vOwnLocations.begin(); i != vOwnLocations.end(); i++) {
 		std::vector<Item>::iterator cur = findPosition(i->name, vRightLocations);
@@ -61,10 +59,11 @@ void QualityClassification::evaluateResult()
 	fp = det - tp;
 	recall = (double) tpShift / gt;
 	precision = (double) tp / det;
+	fMeasure = 2 * recall * precision / ( recall + precision);
 	printf ("\n\nrecall: %.5f%% (tp':%d. gt:%d)\n", recall * 100, tpShift, gt);
 	printf ("precision: %.5f%% (tp:%d. fp:%d. det:%d)\n", precision * 100, tp, fp, det);
+	printf ("F: %.5f%%\n", 100 * fMeasure);
 }
-
 
 std::vector<Item>::iterator QualityClassification::findPosition(char *name, std::vector<Item> &vect)
 {
@@ -73,7 +72,7 @@ std::vector<Item>::iterator QualityClassification::findPosition(char *name, std:
 			return i;
 		}
 	}
-	std::cerr << "Not found name [" << name << "] in file my onw locations pedestrian.";
+	std::cerr << "Not found name [" << name << "] in file my onw locations pedestrian." << std:: endl;
 	return vect.end();
 }
 
