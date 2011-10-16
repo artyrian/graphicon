@@ -56,7 +56,6 @@ void Train::fillModel()
 	param.weight = NULL;
 }
 
-
 void Train::callTrain()
 {
 	modelPedestrian = train(&prob, &param);
@@ -93,89 +92,15 @@ void Train:: freeModel()
 
 char *Train::qualifierTraining()
 {
-	trainPredictData();
+	std::vector<ItemPng> vectPos;
+	createPositiveVector(vectPos);
+	trainPredictData(vectPos);
 	fillModel();
 	callTrain();
 	char *pathFileModel = saveModelToFile();
 	freeModel();
 
 	return pathFileModel;
-}
-
-void Train::trainPredictData()
-{
-	int rStatus;
-	char *pngName = new char [SIZE_STRING_NAME];
-	struct ItemPng item;
-	int x0, y0, x1, y1;
-
-	FILE *fileLocations = fopen(pathFileLocations, "r");
-	while ((rStatus = fscanf(fileLocations, "%s%d%d%d%d", pngName, &y0, &x0, &y1, &x1)) != EOF)
-	{
-		if (rStatus != NUM_PARAMETERS) {
-			fprintf(stderr, "Can't read all option for current png.\n");
-			exit(1);
-		}
-		std::string fileName;
-		fileName = fileName.append(pathDir).append(pngName).append(".png");
-
-		item.name = pngName;
-		item.x = x0;
-		vectP.push_back(item);
-
-		QImage img(fileName.c_str());
-
-		reader.positive(x0, y0, x1, y1, img);
-/*
-		reader.negativeX(x0, x1, img);
-		reader.negative(x0, y0, x1, y1, img);
-*/
-		for(int i = 0; i + X_PIXEL < x0; i += STEP_TRAIN_X) {
-			reader.negative(i, y0, i + X_PIXEL, y1, img);
-		}
-		for(int i = x1; i + X_PIXEL < img.width(); i += STEP_TRAIN_X) {
-			reader.negative(i, y0, i + X_PIXEL, y1, img);
-		}
-	}
-
-	fclose(fileLocations);
-	delete []pngName;
-}
-
-void Train::trainPredictData2(std::vector<ItemPng> &vectN)
-{
-	std::cout << "Size of vector Negative: " << vectN.size() << std::endl;
-
-	for (uint i = 0; i < vectN.size(); i++) {
-		std::string fileName;
-		fileName = fileName.append(pathDir).append(vectN[i].name).append(".png");
-		QImage img(fileName.c_str());
-		reader.negative(vectN[i].x, 0, vectN[i].x + X_PIXEL, Y_PIXEL, img);
-	}
-/*
-	for (uint i = 0; i < vectP.size(); i++) {
-		std::string fileName;
-		fileName = fileName.append(pathDir).append(vectP[i].name).append(".png");
-		QImage img(fileName.c_str());
-		reader.positive(vectP[i].x, 0, vectP[i].x + X_PIXEL, Y_PIXEL, img);
-
-		for(int k = 0; k + X_PIXEL < vectP[i].x; k += STEP_TRAIN_X) {
-			reader.negative(i, 0, i + X_PIXEL, Y_PIXEL, img);
-		}
-		for(int k = vectP[i].x + X_PIXEL; k + X_PIXEL < img.width(); k += STEP_TRAIN_X) {
-			reader.negative(i, 0, i + X_PIXEL, Y_PIXEL, img);
-		}
-	}
-*/
-}
-
-int isInArea(int x, int x0)
-{
-	if ((x > x0 - X_PIXEL/2) && x < x0 + X_PIXEL/2) {
-		return true;
-	} else {
-		return false;
-	}
 }
 
 void Train::createPositiveVector(std::vector<ItemPng> &vectPos)
@@ -200,12 +125,43 @@ void Train::createPositiveVector(std::vector<ItemPng> &vectPos)
 	delete []pngName;
 }
 
+void Train::trainPredictData(std::vector<ItemPng> &vectPos)
+{
+	for (uint i = 0; i < vectPos.size(); i++) {
+		std::string fileName;
+		fileName = fileName.append(pathDir).append(vectPos[i].name).append(".png");
+		QImage img(fileName.c_str());
+		reader.positive(vectPos[i].x, 0, vectPos[i].x + X_PIXEL, Y_PIXEL, img);
+		for(int k = 0; k + X_PIXEL < vectPos[i].x; k += STEP_TRAIN_X) {
+			reader.negative(k, 0, k + X_PIXEL, Y_PIXEL, img);
+		}
+		for(int k = vectPos[i].x + X_PIXEL; k + X_PIXEL < img.width(); k += STEP_TRAIN_X) {
+			reader.negative(k, 0, k + X_PIXEL, Y_PIXEL, img);
+		}
+	}
+}
+
+void Train::trainPredictData2(std::vector<ItemPng> &vectNeg)
+{
+	for (uint i = 0; i < vectNeg.size(); i++) {
+		std::string fileName;
+		fileName = fileName.append(pathDir).append(vectNeg[i].name).append(".png");
+		QImage img(fileName.c_str());
+		reader.negative(vectNeg[i].x, 0, vectNeg[i].x + X_PIXEL, Y_PIXEL, img);
+	}
+}
+
+int isInArea(int x, int x0)
+{
+	if ((x > x0 - X_PIXEL/2) && x < x0 + X_PIXEL/2) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 void Train::createNegativeVector(std::vector<ItemPng> &vectN, std::vector<ItemPng> &vectPs, std::vector<ItemPng> &vectNP)
 {
-	std::cout << "Size of vector NP: " << vectNP.size() << std::endl;
-	std::cout << "Size of vector N(before start): " << vectN.size() << std::endl;
-	std::cout << "Size of vector P: " << vectP.size() << std::endl;
-
 	for (uint i = 0; i < vectNP.size(); i++) {
 		bool positive = false;
 		for (uint j = 0; j < vectPs.size(); j++) {
@@ -219,15 +175,16 @@ void Train::createNegativeVector(std::vector<ItemPng> &vectN, std::vector<ItemPn
 	}
 }
 
-
-char *Train::bootstrapping()
+char *Train::bootstrapping(char *pathDirBt, char *pathFileLocBt)
 {
-	Test test(pathDir, pathFileModel);
+	Test test(pathDirBt, pathFileModel);
 	test.imagesClassification();
 
 	std::cout<< "reader.instances before bootsrt:" << reader.getInstancesNumber() << std::endl;
 
 	std::vector<ItemPng> negVector, posVector;
+	pathDir = pathDirBt;
+	pathFileLocations = pathFileLocBt;
 	createPositiveVector(posVector);
 	createNegativeVector(negVector, posVector,  test.vectNPLocations);
 	trainPredictData2(negVector);
@@ -238,5 +195,6 @@ char *Train::bootstrapping()
 	callTrain();
 	char *pathFileModel = saveModelToFile();
 	freeModel();
+
 	return pathFileModel;
 }

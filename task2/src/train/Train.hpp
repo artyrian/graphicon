@@ -14,16 +14,15 @@ class Train {
 	struct problem prob;
 	struct parameter param;
 	char *pathFileModel;
-	std::vector<ItemPng> vectP;
 public:
 	Train(char *, char *);
 	char *qualifierTraining();
-	char *bootstrapping();
+	char *bootstrapping(char *, char *);
 	~Train();
 	void setC(double param);
 
 private:
-	void trainPredictData();
+	void trainPredictData(std::vector<ItemPng> &vectPos);
 	void createPositiveVector(std::vector<ItemPng> &vectPos);
 	void createNegativeVector(std::vector<ItemPng> &vectN, std::vector<ItemPng> &vectPos, std::vector<ItemPng> &vectNP);
 	void trainPredictData2(std::vector<ItemPng> &vectN);

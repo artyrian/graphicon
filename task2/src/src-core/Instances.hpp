@@ -12,7 +12,7 @@
 #define STEP_X 5
 #define STEP_X_DETECTING 5
 #define POS_START_DETECTING 2
-#define STEP_TRAIN_X 25
+#define STEP_TRAIN_X 30
 
 #define X_PIXEL 80
 #define Y_PIXEL 200

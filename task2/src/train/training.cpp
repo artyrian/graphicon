@@ -2,18 +2,18 @@
 #include <stdio.h>
 
 int main(int argc, char **argv)
-{
-	if (argc < 2) {
+{	
+	if (argc < 4) {
 		fprintf(stderr, "Not enough parameters.\n");
 		exit(1);
 	}
 
+	printf("\n\n\n = = START NEW PROGRAM. C is %s.\n", argv[3]);
+
 	Train train(argv[1], argv[2]);
-//	train.setC(atof(argv[3]));
+	train.setC(atof(argv[3]));
 	train.qualifierTraining();
-	printf("Send any key when ready to bootstrapping.\n");
-	getchar();
-	train.bootstrapping();
+	train.bootstrapping(argv[1], argv[2]);
 
 	return 0;
 }

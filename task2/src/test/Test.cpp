@@ -21,7 +21,7 @@ const char *Test::imagesClassification()
 	std::string pathFileLoc(pathLocations);
 	FILE *fileLocations = fopen(pathFileLoc.c_str(), "w");
 
-	std::cout << "It's work. Wait sometime..." <<std::endl;
+	std::cout << "It's working. Wait sometime..." <<std::endl;
 	for (int i = 0; i < list.size(); ++i) {
 		QImage img(list.at(i).filePath());
 
@@ -64,7 +64,6 @@ void Test::classify(FILE *fileLocations, const char *name)
 		int predict_label = predict(modelPedestrian, x);
 		if (predict_label == 1) {
 			predict_values(modelPedestrian, x, prob_estimates);
-	//		fprintf(fileLocations, "%s\t%d\t%d\t%d\t%d\n", name, 0, STEP_X_DETECTING * i, 200, STEP_X_DETECTING * i + X_PIXEL);
 		} else {
 			prob_estimates[0] = 0;
 		}
