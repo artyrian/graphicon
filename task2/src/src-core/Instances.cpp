@@ -156,14 +156,6 @@ void InstancesData::processInstance(int x0, int y0, int x1, int y1, QImage &img)
 	processSign();
 }
 
-/*
-double InstancesData::conversion(double component, double lambda)
-{
-	double newComponent;
-
-	newComponent = exp((-i))
-}
-*/
 
 void InstancesData::positive(int x0, int y0, int x1, int y1, QImage &img)
 {

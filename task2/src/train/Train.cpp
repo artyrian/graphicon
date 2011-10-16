@@ -49,6 +49,7 @@ void Train::fillModel()
 
 	// default values of params. don't change them if not sure (unless param.C)
 	param.solver_type = L2R_L2LOSS_SVC_DUAL;
+	printf ("ValueC: %f\n", valueC);
 	param.C = valueC;
 	param.eps = 1e-4;
 	param.nr_weight = 0;
@@ -129,7 +130,13 @@ void Train::trainPredictData(std::vector<ItemPng> &vectPos)
 {
 	for (uint i = 0; i < vectPos.size(); i++) {
 		std::string fileName;
-		fileName = fileName.append(pathDir).append(vectPos[i].name).append(".png");
+		fileName = fileName.append(pathDir);
+
+		if (fileName[fileName.size() - 1] != '/') {
+		       fileName = fileName.append("/");
+		}
+		fileName = fileName.append(vectPos[i].name).append(".png");
+
 		QImage img(fileName.c_str());
 		reader.positive(vectPos[i].x, 0, vectPos[i].x + X_PIXEL, Y_PIXEL, img);
 		for(int k = 0; k + X_PIXEL < vectPos[i].x; k += STEP_TRAIN_X) {
