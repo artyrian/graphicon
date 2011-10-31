@@ -14,5 +14,3 @@ HEADERS  += window.h \
     MyWatch.h \
     figures.h \
     resources.h
-
-LIBS += -lglut

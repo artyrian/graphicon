@@ -6,7 +6,8 @@
 #include <QVector3D>
 #include <QColor>
 #include <QMatrix4x4>
-#include <GL/glut.h>
+
+#include <QtOpenGL/qgl.h>
 
 static inline void qMultMatrix(const QMatrix4x4 &mat)
 {
@@ -34,9 +35,10 @@ struct Geometry {
     QVector<GLushort> faces;
     QVector<QVector3D> vertices;
     QVector<QVector3D> normals;
+    QVector<QVector2D> textures;
     void loadArrays() const;
 
-//    void appendSmooth(const QVector3D &a, const QVector3D &n, int from);
+    void appendSmooth(const QVector3D &a, const QVector3D &n, int from);
     void appendFaceted(const QVector3D &a, const QVector3D &n);
 
     void finalize();
@@ -46,10 +48,9 @@ struct Geometry {
 class Patch {
 
 public:
-//    enum Smoothing { Faceted, Smooth };
     Patch(Geometry *);
     ~Patch();
-//    void setSmoothing(Smoothing s) { sm = s; }
+    void setSmoothing(bool s);
     void translate(const QVector3D &t);
     void rotate(qreal deg, QVector3D axis);
     void draw() const;
@@ -58,17 +59,12 @@ public:
 
     GLushort start;
     GLushort count;
-//    GLushort initv;
+    GLushort initv;
 
     GLfloat faceColor[4];
     QMatrix4x4 mat;
-//    Smoothing sm;
+    bool smoothing;
     Geometry *geom;
-};
-
-class CoordAxis {
-public:
-    CoordAxis(qreal x, qreal y, qreal z);
 };
 
 class Rectoid {
@@ -76,6 +72,7 @@ public:
     void translate(const QVector3D &t);
     void rotate(qreal deg, QVector3D axis);
     QList<Patch*> parts;
+
 };
 
 class RectTorus : public Rectoid {
@@ -84,8 +81,10 @@ public:
 };
 
 class RectSolidCylindre : public Rectoid {
+
 public:
     RectSolidCylindre(Geometry *g, qreal rad, qreal depth, int numSectors);
+
 };
 
 class RectPrism : public Rectoid {

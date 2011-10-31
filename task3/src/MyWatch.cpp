@@ -1,8 +1,7 @@
 #include <QGLWidget>
 #include <QMatrix4x4>
 
-
-#include <GL/freeglut.h>
+#include <iostream>
 
 #include "MyWatch.h"
 #include "figures.h"
@@ -26,8 +25,39 @@ void MyWatch::setColor(QColor c)
     }
 }
 
+void MyWatch::TextureInit()
+{
+    QImage img;
+    img.load("1.bmp");
+
+    if (img.isNull()) {
+        std::cout << "Error load image." << std::endl;
+        return;
+    }
+    img = QGLWidget::convertToGLFormat(img);
+
+    glGenTextures(1, textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID[0]);
+       // связываем текстурный объект с изображением
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // задаём линейную фильтрацию вдали:
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // задаём: при фильтрации игнорируются тексели, выходящие за границу текстуры для s координаты
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    // задаём: при фильтрации игнорируются тексели, выходящие за границу текстуры для t координаты
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // задаём: цвет текселя полностью замещает цвет фрагмента фигуры
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, (GLsizei)img.width(), (GLsizei)img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
+
+}
+
 void MyWatch::buildGeometry()
 {
+    TextureInit();
+
     RectSolidCylindre body (geom, body_rad, body_depth, numSectors);
 
     RectSolidCylindre axis (geom, axis_rad, axis_depth, numSectors);
@@ -77,6 +107,54 @@ void CoordAxis()
 	glVertex3d(0,1,0);
 	glVertex3d(0,0,0);
 	glVertex3d(0,0,1.5);
+    glEnd();
+/*
+    glBegin(GL_QUADS);
+
+                                    // Передняя грань
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.1f, -0.1f,  0.1f);	// Низ лево
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 0.1f, -0.1f,  0.1f);	// Низ право
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 0.1f,  0.1f,  0.1f);	// Верх право
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.1f,  0.1f,  0.1f);	// Верх лево
+
+                                    // Задняя грань
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-0.1f, -0.1f, -0.1f);	// Низ право
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(-0.1f,  0.1f, -0.1f);	// Верх право
+    glTexCoord2f(0.0f, 1.0f); glVertex3f( 0.1f,  0.1f, -0.1f);	// Верх лево
+    glTexCoord2f(0.0f, 0.0f); glVertex3f( 0.1f, -0.1f, -0.1f);	// Низ лево
+
+                                    // Верхняя грань
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.1f,  0.1f, -0.1f);	// Верх лево
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.1f,  0.1f,  0.1f);	// Низ лево
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 0.1f,  0.1f,  0.1f);	// Низ право
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 0.1f,  0.1f, -0.1f);	// Верх право
+
+                                    // Нижняя грань
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(-0.1f, -0.1f, -0.1f);	// Верх право
+    glTexCoord2f(0.0f, 1.0f); glVertex3f( 0.1f, -0.1f, -0.1f);	// Верх лево
+    glTexCoord2f(0.0f, 0.0f); glVertex3f( 0.1f, -0.1f,  0.1f);	// Низ лево
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-0.1f, -0.1f,  0.1f);	// Низ право
+
+                                    // Правая грань
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 0.1f, -0.1f, -0.1f);	// Низ право
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 0.1f,  0.1f, -0.1f);	// Верх право
+    glTexCoord2f(0.0f, 1.0f); glVertex3f( 0.1f,  0.1f,  0.1f);	// Верх лево
+    glTexCoord2f(0.0f, 0.0f); glVertex3f( 0.1f, -0.1f,  0.1f);	// Низ лево
+
+                                    // Левая грань
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.1f, -0.1f, -0.1f);	// Низ лево
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-0.1f, -0.1f,  0.1f);	// Низ право
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(-0.1f,  0.1f,  0.1f);	// Верх право
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.1f,  0.1f, -0.1f);	// Верх лево
+
+    glEnd();
+*/
+
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.1f, -0.1f,  0.1f);	// Низ лево
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 0.2f, -0.2f,  0.1f);	// Низ право
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 0.3f,  0.3f,  0.1f);	// Верх право
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.4f,  0.4f,  0.1f);	// Верх лево
     glEnd();
 }
 

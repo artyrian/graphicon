@@ -1,5 +1,7 @@
 #include "figures.h"
 
+#include <QImage>
+#include <iostream>
 #include <qmath.h>
 
 static inline QVector<QVector3D> extrude(const QVector<QVector3D> &verts, qreal depth)
@@ -17,6 +19,7 @@ void Geometry::loadArrays() const
 {
     glVertexPointer(3, GL_FLOAT, 0, vertices.constData());
     glNormalPointer(GL_FLOAT, 0, normals.constData());
+    glTexCoordPointer(2, GL_FLOAT, 0, textures.constData());
 }
 
 /* Normalize all normals in vector to length 1.0 */
@@ -25,6 +28,25 @@ void Geometry::finalize()
     for (int i = 0; i < normals.count(); ++i) {
 	normals[i].normalize();
     }
+}
+
+void Geometry::appendSmooth(const QVector3D &a, const QVector3D &n, int from)
+{
+    int v = vertices.count() - 1;
+    for ( ; v >= from; --v) {
+        if (qFuzzyCompare(vertices[v], a)) {
+            normals[v] += n;
+            break;
+        }
+    }
+
+    if (v < from) {
+        v = vertices.count();
+        vertices.append(a);
+        normals.append(n);
+    }
+
+    faces.append(v);
 }
 
 void Geometry::appendFaceted(const QVector3D &a, const QVector3D &n)
@@ -41,10 +63,18 @@ void Geometry::appendFaceted(const QVector3D &a, const QVector3D &n)
 
 Patch::Patch(Geometry *g)
    : geom(g)
+
 {
     start = geom->faces.count();
     count = 0;
+    initv = g->vertices.count();
+    smoothing = true;
     qSetColor(faceColor, QColor(Qt::darkGray));
+}
+
+void Patch::setSmoothing(bool s)
+{
+    smoothing = s;
 }
 
 void Patch::rotate(qreal deg, QVector3D axis)
@@ -72,9 +102,25 @@ void Patch::addTri(const QVector3D &a, const QVector3D &b, const QVector3D &c, c
 {
     QVector3D norm = n.isNull() ? QVector3D::normal(a, b, c) : n;
 
-    geom->appendFaceted(a, norm);
-    geom->appendFaceted(b, norm);
-    geom->appendFaceted(c, norm);
+    if (smoothing)
+    {
+        geom->appendSmooth(a, norm, initv);
+        geom->appendSmooth(b, norm, initv);
+        geom->appendSmooth(c, norm, initv);
+    }
+    else
+    {
+        geom->appendFaceted(a, norm);
+        geom->appendFaceted(b, norm);
+        geom->appendFaceted(c, norm);
+    }
+/*
+    geom->textures.append(QVector2D(0.3f, 0.3f));
+    geom->textures.append(QVector2D(0.6f, 0.6f));
+    geom->textures.append(QVector2D(0.6f, 0.43f));
+*/
+
+
 
     count += 3;
 }
@@ -82,16 +128,24 @@ void Patch::addTri(const QVector3D &a, const QVector3D &b, const QVector3D &c, c
 void Patch::addQuad(const QVector3D &a, const QVector3D &b,  const QVector3D &c, const QVector3D &d)
 {
     QVector3D norm = QVector3D::normal(a, b, c);
-    addTri(a, b, c, norm);
-    addTri(a, c, d, norm);
-}
-//=====================
-CoordAxis::CoordAxis(qreal x, qreal y, qreal z)
-{
+    if (smoothing) {
+        addTri(a, b, c, norm);
+        addTri(a, c, d, norm);
+    } else {
+        addTri(a, b, c, norm);
+        int k = geom->vertices.count();
+        geom->appendSmooth(a, norm, k);
+        geom->appendSmooth(c, norm, k);
+        geom->appendFaceted(d, norm);
+        count += 3;
+    }
+    geom->textures.append(QVector2D(0.1, 0.1));
+    geom->textures.append(QVector2D(0.1, 0.0));
+    geom->textures.append(QVector2D(0.0, 0.0));
+    geom->textures.append(QVector2D(0.0, 0.1));
 
 }
 
-// =====================================
 
 void Rectoid::translate(const QVector3D &t)
 {
@@ -167,6 +221,8 @@ RectSolidCylindre::RectSolidCylindre(Geometry *g, qreal rad, qreal depth, int k)
 
     parts << front << back << os;
 }
+
+
 
 //============================
 

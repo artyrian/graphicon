@@ -7,7 +7,7 @@
 #include "figures.h"
 
 class MyWatch : public QObject {
-
+    GLuint textureID[1];
 public:
     MyWatch(QObject *parent, float scale = 1.0);
     ~MyWatch();
@@ -17,6 +17,7 @@ public:
     void draw();
     void dynamicDraw();
 private:
+    void TextureInit();
     void buildGeometry();
     void dynamicGeometry();
     QList<Patch *> parts;

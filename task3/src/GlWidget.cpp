@@ -41,11 +41,11 @@ QSize GLWidget::sizeHint() const
 static void qNormalizeAngle(int &angle)
 {
     while (angle < 0) {
-	angle += 360 * 16;
+        angle += 360;
     }
 
-    while (angle > 360 * 16) {
-	angle -= 360 * 16;
+    while (angle > 360) {
+        angle -= 360;
     }
 }
 
@@ -70,9 +70,12 @@ void GLWidget::initializeGL()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glShadeModel(GL_SMOOTH);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
+   // glEnable(GL_LIGHTING);
+  //  glEnable(GL_LIGHT0);
     glEnable(GL_MULTISAMPLE);
+    //
+    glEnable(GL_TEXTURE_2D);
+    //
     static GLfloat lightPosition[4] = { 0.5, 5.0, 7.0, 1.0 };
     glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 }
@@ -83,9 +86,9 @@ void GLWidget::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
     glTranslatef(0.0, 0.0, -10.0);
-    glRotatef(xRot / 16.0, 1.0, 0.0, 0.0);
-    glRotatef(yRot / 16.0, 0.0, 1.0, 0.0);
-    glRotatef(zRot / 16.0, 0.0, 0.0, 1.0);
+    glRotatef(xRot, 1.0, 0.0, 0.0);
+    glRotatef(yRot, 0.0, 1.0, 0.0);
+    glRotatef(zRot, 0.0, 0.0, 1.0);
 
     watch->draw();
 }
@@ -116,11 +119,11 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     int dy = event->y() - lastPos.y();
 
     if (event->buttons() & Qt::LeftButton) {
-	setRotation(xRot, xRot + 8 * dy);
-	setRotation(yRot, yRot + 8 * dx);
+        setRotation(xRot, xRot + dy);
+        setRotation(yRot, yRot + dx);
     } else if (event->buttons() & Qt::RightButton) {
-	setRotation(xRot, xRot + 8 * dy);
-	setRotation(zRot, zRot + 8 * dx);
+        setRotation(xRot, xRot + dy);
+        setRotation(zRot, zRot + dx);
     }
 
     lastPos = event->pos();
