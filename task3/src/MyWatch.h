@@ -12,18 +12,25 @@ public:
     MyWatch(QObject *parent, float scale = 1.0);
     ~MyWatch();
 
-    void setColor(QColor c);
 
     void draw();
     void dynamicDraw();
+    void drawWithTextures();
+    void drawWithoutTextures();
 private:
+    void createTextureArray();
+    void setColor(QColor c, QList <Patch *> &parts);
+
     void TextureInit();
-    void buildGeometry();
+    void buildGeometryWithoutTextures(Geometry *g, QList<Patch *> &parts);
+    void buildGeometry(Geometry *g, QList<Patch *> &parts);
     void dynamicGeometry();
-    QList<Patch *> parts;
+    QList<Patch *> partsWithTextures;
     QList<Patch *> dynamicParts;
-    Geometry *geom;
+    QList<Patch *> partsWithoutTextures;
+    Geometry *geometryWithTextures;
     Geometry *dynGeom;
+    Geometry *geometryWithoutTextures;
 };
 
 #endif // MYWATCH_H

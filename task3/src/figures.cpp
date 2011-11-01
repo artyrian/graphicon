@@ -58,6 +58,7 @@ void Geometry::appendFaceted(const QVector3D &a, const QVector3D &n)
 }
 
 
+
 //===========================
 
 
@@ -114,13 +115,6 @@ void Patch::addTri(const QVector3D &a, const QVector3D &b, const QVector3D &c, c
         geom->appendFaceted(b, norm);
         geom->appendFaceted(c, norm);
     }
-/*
-    geom->textures.append(QVector2D(0.3f, 0.3f));
-    geom->textures.append(QVector2D(0.6f, 0.6f));
-    geom->textures.append(QVector2D(0.6f, 0.43f));
-*/
-
-
 
     count += 3;
 }
@@ -139,13 +133,9 @@ void Patch::addQuad(const QVector3D &a, const QVector3D &b,  const QVector3D &c,
         geom->appendFaceted(d, norm);
         count += 3;
     }
-    geom->textures.append(QVector2D(0.1, 0.1));
-    geom->textures.append(QVector2D(0.1, 0.0));
-    geom->textures.append(QVector2D(0.0, 0.0));
-    geom->textures.append(QVector2D(0.0, 0.1));
+
 
 }
-
 
 void Rectoid::translate(const QVector3D &t)
 {
@@ -158,6 +148,54 @@ void Rectoid::rotate(qreal deg, QVector3D axis)
     for (int i = 0; i < parts.count(); ++i)
 	parts[i]->rotate(deg, axis);
 }
+
+//=======================================
+
+Winch::Winch(Geometry *g, qreal iRad, qreal oRad, qreal depth, int k)
+{
+    QVector<QVector3D> inside;
+    QVector<QVector3D> outside;
+    for (int i = 0; i < k; ++i) {
+        qreal angle = (i * 2 * M_PI) / k;
+        inside << QVector3D(iRad * qSin(angle), iRad * qCos(angle), depth/2.0);
+        outside << QVector3D(oRad * qSin(angle + M_PI/(qreal)k), oRad * qCos(angle + M_PI/(qreal)k), depth/2.0);
+    }
+
+    QVector<QVector3D> in_back = extrude(inside, depth);
+    QVector<QVector3D> out_back = extrude(outside, depth);
+
+    Patch *front = new Patch(g);
+    for (int i = 0; i < k; ++i) {
+        front->addQuad(outside[i], inside[i], inside[(i + 1) % k], outside[(i + 1) % k]);
+        QVector3D a = outside[i];
+        QVector3D b = inside [(i+1) % k];
+        QVector3D c = inside[i];
+        QVector3D norm = QVector3D::normal(a, b, c);
+        front->addTri(a, b, c, norm);
+    }
+
+    Patch *back = new Patch(g);
+    for (int i = 0; i < k; ++i) {
+        back->addQuad(in_back[i], out_back[i], out_back[(i + 1) % k], in_back[(i + 1) % k]);
+        QVector3D a = out_back[i];
+        QVector3D b = in_back[i];
+        QVector3D c = in_back[(i+1) % k];
+        QVector3D norm = QVector3D::normal(a, b, c);
+        front->addTri(a, b, c, norm);
+    }
+
+    Patch *os1 = new Patch(g);
+    Patch *os2 = new Patch(g);
+    for (int i = 0; i < k; ++i) {
+        os1->addQuad(in_back[i], out_back[(i + 1) % k], outside[(i + 1) % k], inside[i]);
+        os2->addQuad(out_back[(i + 1) % k], in_back[(i+1) % k], inside[(i+1) % k], outside[(i + 1) % k]);
+    }
+
+
+    parts //<< front << back
+          << os1 << os2;
+}
+
 // ======================================
 
 RectTorus::RectTorus(Geometry *g, qreal iRad, qreal oRad, qreal depth, int k)
@@ -169,8 +207,8 @@ RectTorus::RectTorus(Geometry *g, qreal iRad, qreal oRad, qreal depth, int k)
 	inside << QVector3D(iRad * qSin(angle), iRad * qCos(angle), depth/2.0);
 	outside << QVector3D(oRad * qSin(angle), oRad * qCos(angle), depth/2.0);
     }
-    inside << QVector3D(0.0, iRad, 0.0);
-    outside << QVector3D(0.0, oRad, 0.0);
+ //   inside << QVector3D(0.0, iRad, 0.0);
+ //   outside << QVector3D(0.0, oRad, 0.0);
 
     QVector<QVector3D> in_back = extrude(inside, depth);
     QVector<QVector3D> out_back = extrude(outside, depth);
@@ -196,6 +234,48 @@ RectTorus::RectTorus(Geometry *g, qreal iRad, qreal oRad, qreal depth, int k)
 
 //==================================
 
+RectTriangleTorus::RectTriangleTorus(Geometry *g, qreal iRad, qreal oRad, qreal depth, int k)
+{
+    QVector<QVector3D> inside;
+    QVector<QVector3D> outside;
+    for (int i = 0; i < k; ++i) {
+        qreal angle = (i * 2 * M_PI) / k;
+        inside << QVector3D(iRad * qSin(angle), iRad * qCos(angle), depth/2.0);
+        outside << QVector3D(oRad * qSin(angle), oRad * qCos(angle), depth/2.0);
+    }
+
+    QVector<QVector3D> in_back = extrude(inside, depth);
+    QVector<QVector3D> out_back = extrude(outside, depth);
+
+    Patch *front = new Patch(g);
+    for (int i = 0; i < k; ++i) {
+        front->addQuad(out_back[i], inside[i], inside[(i + 1) % k], out_back[(i + 1) % k]);
+    }
+
+    Patch *back = new Patch(g);
+    for (int i = 0; i < k; ++i) {
+        back->addQuad(in_back[i], out_back[i], out_back[(i + 1) % k], in_back[(i + 1) % k]);
+    }
+
+    Patch *is = new Patch(g);
+    for (int i = 0; i < k; ++i) {
+        is->addQuad(in_back[i], in_back[(i + 1) % k], inside[(i + 1) % k], inside[i]);
+    }
+
+    parts << front << back << is;
+}
+
+//==================================
+
+void Patch::addTexTri(const QVector3D &a, const QVector3D &b, const QVector3D &c, const qreal &fullLength)
+{
+    QVector2D p1(a.x() / (2 * fullLength) + 0.5, a.y() / (2 * fullLength) + 0.5);
+    QVector2D p2(b.x() / (2 * fullLength) + 0.5, b.y() / (2 * fullLength) + 0.5);
+    QVector2D p3(c.x() / (2 * fullLength) + 0.5, c.y() / (2 * fullLength) + 0.5);
+
+    geom->textures << p1 << p2 << p3  ;
+}
+
 RectSolidCylindre::RectSolidCylindre(Geometry *g, qreal rad, qreal depth, int k)
 {
     QVector<QVector3D> outside;
@@ -203,26 +283,44 @@ RectSolidCylindre::RectSolidCylindre(Geometry *g, qreal rad, qreal depth, int k)
 	qreal angle = (i * 2 * M_PI) / k;
 	outside << QVector3D(rad * qSin(angle), rad * qCos(angle), 0);
     }
-    outside << QVector3D(0.0, rad, 0.0);
 
     QVector<QVector3D> out_back = extrude(outside, depth);
 
     Patch *front = new Patch(g);
-    for (int i = 0; i < k; ++i)
-	front->addQuad(outside[i], QVector3D(0, 0, 0), QVector3D(0, 0, 0), outside[(i + 1) % k]);
+    front->setSmoothing(false);
+    for (int i = 0; i < k; ++i) {
+ //       front->addQuad(outside[i], QVector3D(0, 0, 0), QVector3D(0, 0, 0), outside[(i + 1) % k]);
+
+        QVector3D a = outside[i];
+        QVector3D b = QVector3D(0, 0, 0);
+        QVector3D c = outside[(i+1)%k];
+        QVector3D norm = QVector3D::normal(a, b, c);
+        front->addTri(a, b, c, norm);
+        front->addTexTri(a, b, c, rad);
+   }
 
     Patch *back = new Patch(g);
-    for (int i = 0; i < k; ++i)
-	back->addQuad(QVector3D(0, 0, -depth), out_back[i], out_back[(i + 1) % k], QVector3D(0, 0, -depth));
+    back->setSmoothing(false);
+    for (int i = 0; i < k; ++i) {
+
+        QVector3D a = QVector3D(0, 0, -depth);
+        QVector3D b = out_back[i];
+        QVector3D c = out_back[(i + 1) % k];
+        QVector3D norm = QVector3D::normal(a, b, c);
+        back->addTri(a, b, c, norm);
+        back->addTexTri(a, b, c, rad);
+
+//        back->addQuad(QVector3D(0, 0, -depth), out_back[i], out_back[(i + 1) % k], QVector3D(0, 0, -depth));
+    }
 
     Patch *os = new Patch(g);
-    for (int i = 0; i < k; ++i)
+    for (int i = 0; i < k; ++i) {
 	os->addQuad(out_back[(i + 1) % k], out_back[i], outside[i], outside[(i + 1) % k]);
+        g->textures  << QVector2D(1.0f, 0.0f)  << QVector2D(1.0f, 1.0f)  << QVector2D(0.0f, 1.0f) << QVector2D(0.0f, 0.0f)     ;
+    }
 
     parts << front << back << os;
 }
-
-
 
 //============================
 
@@ -264,15 +362,14 @@ RectMarks::RectMarks(Geometry *g, qreal rad, qreal width, qreal height, qreal de
 {
     QVector3D z(0, 0, 1);
 
-    for (int i = 0; i < 11; i++) {
-	RectPrism markH (g,width, height, depth);
+    for (int i = 0; i < 12; i++) {
+        RectPrism markH (g, width, height, depth);
 	qreal angel = - i * 30.0;
 	QVector3D place(qCos(M_PI * angel / 180.0) * rad, qSin(M_PI * angel / 180.0) * rad, 0);
 	markH.translate(place);
 	markH.rotate(90 + angel, z);
 	parts << markH.parts;
     }
-
 
 }
 
@@ -313,6 +410,7 @@ RectMinuteHand::RectMinuteHand(Geometry *g, qreal x, qreal y, qreal depth)
 }
 
 //===================
+
 RectHourHand::RectHourHand(Geometry *g, qreal x, qreal y, qreal depth)
 {
     time = QTime::currentTime();

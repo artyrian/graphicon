@@ -56,6 +56,7 @@ public:
     void draw() const;
     void addTri(const QVector3D &a, const QVector3D &b, const QVector3D &c, const QVector3D &n);
     void addQuad(const QVector3D &a, const QVector3D &b,  const QVector3D &c, const QVector3D &d);
+    void addTexTri(const QVector3D &a, const QVector3D &b, const QVector3D &c, const qreal &fullLength);
 
     GLushort start;
     GLushort count;
@@ -65,6 +66,8 @@ public:
     QMatrix4x4 mat;
     bool smoothing;
     Geometry *geom;
+
+    int texture_num;
 };
 
 class Rectoid {
@@ -80,11 +83,22 @@ public:
     RectTorus(Geometry *g, qreal iRad, qreal oRad, qreal depth, int numSectors);
 };
 
+class RectTriangleTorus : public Rectoid {
+public:
+    RectTriangleTorus(Geometry *g, qreal iRad, qreal oRad, qreal depth, int numSectors);
+};
+
 class RectSolidCylindre : public Rectoid {
 
 public:
     RectSolidCylindre(Geometry *g, qreal rad, qreal depth, int numSectors);
 
+};
+
+
+class Winch : public Rectoid {
+public:
+    Winch(Geometry *g, qreal iRad, qreal oRad, qreal depth, int numSectors);
 };
 
 class RectPrism : public Rectoid {
