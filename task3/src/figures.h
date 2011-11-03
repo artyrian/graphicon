@@ -9,6 +9,7 @@
 
 #include <QtOpenGL/qgl.h>
 
+
 static inline void qMultMatrix(const QMatrix4x4 &mat)
 {
     if (sizeof(qreal) == sizeof(GLfloat)) {
@@ -83,6 +84,16 @@ public:
     RectTorus(Geometry *g, qreal iRad, qreal oRad, qreal depth, int numSectors);
 };
 
+class RectEllipseTorus : public Rectoid {
+public:
+    RectEllipseTorus(Geometry *g, qreal iRad, qreal oRad, qreal depth, int numSectors);
+};
+
+class RectBeltTorus : public Rectoid {
+public:
+    RectBeltTorus(Geometry *g);
+};
+
 class RectTriangleTorus : public Rectoid {
 public:
     RectTriangleTorus(Geometry *g, qreal iRad, qreal oRad, qreal depth, int numSectors);
@@ -95,15 +106,40 @@ public:
 
 };
 
+class TopBelt : public Rectoid {
+public:
+    TopBelt(Geometry *g);
+};
+
+class BottomBelt : public Rectoid {
+public:
+    BottomBelt(Geometry *g);
+};
+
+class Benches : public Rectoid {
+
+public:
+    Benches(Geometry *g, qreal widht, qreal height,  qreal depth, qreal border);
+};
 
 class Winch : public Rectoid {
 public:
-    Winch(Geometry *g, qreal iRad, qreal oRad, qreal depth, int numSectors);
+    Winch(Geometry *g, qreal iRad, qreal depth);
 };
 
 class RectPrism : public Rectoid {
 public:
     RectPrism(Geometry *g, qreal width, qreal height, qreal depth);
+};
+
+class RectTri : public Rectoid {
+public:
+    RectTri(Geometry *g, qreal width, qreal height, qreal depth);
+};
+
+class RectPrism2 : public Rectoid {
+public:
+    RectPrism2(Geometry *g, qreal width, qreal height, qreal depth, qreal delta);
 };
 
 class RectMarks : public Rectoid {
@@ -118,20 +154,20 @@ class RectSecondHand : public Rectoid {
     QVector3D placeHand;
     QVector3D placePend;
 public:
-    RectSecondHand(Geometry *g, qreal edge, qreal base, qreal wight_base, qreal depth);
+    RectSecondHand(Geometry *g, qreal edge, qreal base, qreal wight_base, qreal depth, bool anim);
 };
 
 class RectMinuteHand : public Rectoid {
     QTime time;
     QVector3D z;
 public:
-    RectMinuteHand(Geometry *g, qreal x, qreal y, qreal depth);
+    RectMinuteHand(Geometry *g, qreal x, qreal y, qreal depth, bool anim);
 };
 
 class RectHourHand : public Rectoid {
     QTime time;
     QVector3D z;
 public:
-    RectHourHand(Geometry *g, qreal x, qreal y, qreal depth);
+    RectHourHand(Geometry *g, qreal x, qreal y, qreal depth, bool anim);
 };
 #endif // FIGURES_H

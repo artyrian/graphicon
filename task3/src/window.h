@@ -2,8 +2,9 @@
 #define WINDOW_H
 
 #include <QWidget>
+#include <QMenuBar>
+#include <QWidget>
 #include "GlWidget.h"
-
 
 class Window : public QWidget
 {
@@ -12,11 +13,29 @@ class Window : public QWidget
 public:
     Window();
 
+private slots:
+        void setAnimation();
+
 protected:
 	void keyPressEvent(QKeyEvent *);
 
+
 private:
+        void createActions();
+        void createMenus();
+        void presentation();
+
 	GLWidget *glWidget;
+
+        QAction *fullScreen;
+        QAction *normalScreen;
+        QAction *animation;
+        QAction *setPresentation;
+        QAction *exitAct;
+
+        QMenu *menu;
+        QTimer *timer;
+        QMenuBar *menubar;
 };
 
 #endif // WINDOW_H

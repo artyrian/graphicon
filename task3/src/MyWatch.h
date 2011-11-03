@@ -9,12 +9,13 @@
 class MyWatch : public QObject {
     GLuint textureID[1];
 public:
-    MyWatch(QObject *parent, float scale = 1.0);
+    MyWatch(QObject *parent);
     ~MyWatch();
 
 
-    void draw();
-    void dynamicDraw();
+    void draw(bool isAnimation);
+    void drawGlass();
+    void dynamicDraw(bool isAnimation);
     void drawWithTextures();
     void drawWithoutTextures();
 private:
@@ -24,13 +25,17 @@ private:
     void TextureInit();
     void buildGeometryWithoutTextures(Geometry *g, QList<Patch *> &parts);
     void buildGeometry(Geometry *g, QList<Patch *> &parts);
-    void dynamicGeometry();
+    void dynamicGeometry(bool isAnimation);
+    void buildGlass(Geometry *g, QList <Patch*> &parts);
     QList<Patch *> partsWithTextures;
     QList<Patch *> dynamicParts;
     QList<Patch *> partsWithoutTextures;
+    QList<Patch *> partsGlass;
     Geometry *geometryWithTextures;
     Geometry *dynGeom;
     Geometry *geometryWithoutTextures;
+    Geometry *geometryGlass;
+
 };
 
 #endif // MYWATCH_H
