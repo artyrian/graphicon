@@ -3,6 +3,8 @@
 
 const int numSectors = 64;
 
+const int count_textures = 5;
+
 const float axis_rad = 0.005;
 const float axis_depth = 0.015;
 
@@ -38,7 +40,7 @@ const float belt_hole = 0.02;
 const float belt_after_hole = belt_bottom_height/2.0;
 const int count_holes_in_belt = 5;
 
-const int num_winch_tri = 24;
+const int num_winch_tri = 48;
 const float winch_ledge = 0.05;
 const float winch_rad = body_depth / 2.0 - 0.01;
 const float winch_depth = 0.03;

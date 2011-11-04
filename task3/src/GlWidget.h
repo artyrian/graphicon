@@ -11,15 +11,18 @@ public:
     GLWidget(QWidget *parent = 0);
     ~GLWidget();
 
+    bool showMirror;
+    bool lolMode;
 
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
-    bool isAnimation;
-    void presentation();
+
+    void rotation();
 
 public slots:
     void setRotation(int &coordRot, int angle);
     void animation();
+    void presentation();
 
 protected:
     void initializeGL();
@@ -31,15 +34,18 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *q);
 private:
     MyWatch *watch;
-
+    bool isAnimation;
     int xRot;
     int yRot;
     int zRot;
     QPoint lastPos;
-    QColor qtRed;
-    QColor qtBlue;
-
+    QColor backgroundColor;
+    QTimer *timer;
+    QTimer *timerRotate;
     double zoom;
+
+
+    void Mirroring();
 };
 
 #endif // GLWIDGET_H

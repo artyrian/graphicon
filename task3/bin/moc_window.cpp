@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'window.h'
 **
-** Created: Thu Nov 3 08:52:52 2011
+** Created: Fri Nov 4 07:15:51 2011
 **      by: The Qt Meta Object Compiler version 62 (Qt 4.7.2)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,7 +23,7 @@ static const uint qt_meta_data_Window[] = {
        5,       // revision
        0,       // classname
        0,    0, // classinfo
-       1,   14, // methods
+       4,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -32,12 +32,16 @@ static const uint qt_meta_data_Window[] = {
 
  // slots: signature, parameters, type, tag, flags
        8,    7,    7,    7, 0x08,
+      23,    7,    7,    7, 0x08,
+      38,    7,    7,    7, 0x08,
+      50,    7,    7,    7, 0x08,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_Window[] = {
-    "Window\0\0setAnimation()\0"
+    "Window\0\0setAnimation()\0presentation()\0"
+    "setMirror()\0setMode()\0"
 };
 
 const QMetaObject Window::staticMetaObject = {
@@ -70,9 +74,12 @@ int Window::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
         case 0: setAnimation(); break;
+        case 1: presentation(); break;
+        case 2: setMirror(); break;
+        case 3: setMode(); break;
         default: ;
         }
-        _id -= 1;
+        _id -= 4;
     }
     return _id;
 }

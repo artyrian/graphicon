@@ -88,7 +88,9 @@ Patch::Patch(Geometry *g)
     count = 0;
     initv = g->vertices.count();
     smoothing = true;
-    qSetColor(faceColor, QColor(Qt::lightGray));
+    qSetColor(faceColor, QColor(Qt::white));
+    faceShininess = 100;
+    qSetColor(faceSpecular, QColor(0.5, 0.5, 0.5, 0.5));
 }
 
 void Patch::setSmoothing(bool s)
@@ -111,6 +113,10 @@ void Patch::draw() const
     glPushMatrix();
     qMultMatrix(mat);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, faceColor);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, faceShininess);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, faceSpecular);
+
+
 
     const GLushort *indices = geom->faces.constData();
     glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, indices + start);
@@ -631,16 +637,6 @@ TopBelt::TopBelt(Geometry *g)
     end.translate(QVector3D(0, 3 * belt_top_height / 2.0 + 0.01 - belt_depth/2.0 ,  - belt_depth - benches_depth /2.0 + 0.003));
     end.rotate(90, QVector3D(0, 1, 0));
 
-    RectPrism ls(g,belt_depth, belt_width/2.0, 2 * belt_depth);
-    RectPrism rs(g,belt_depth, belt_width/2.0, 2 * belt_depth);
-    RectPrism ts(g,belt_width +  belt_depth, 3 * belt_depth, 2 * belt_depth);
-    ls.translate(QVector3D(- belt_width / 2.0, 3 * belt_top_height / 2.0 + 0.01 - belt_depth/2.0 + belt_width/4.0 ,  - belt_depth - benches_depth /2.0 + 0.003));
-    rs.translate(QVector3D(belt_width / 2.0, 3 * belt_top_height / 2.0 + 0.01 - belt_depth/2.0 + belt_width/4.0 ,  - belt_depth - benches_depth /2.0 + 0.003));
-    ts.translate(QVector3D(0, 3 * belt_top_height / 2.0 + 0.01 - belt_depth/2.0 + belt_width/2.0   ,  - belt_depth - benches_depth /2.0 + 0.003));
-
-    RectSolidCylindre s(g, belt_hole/2.0, belt_width/2.0 + belt_depth, numSectors);
-    s.translate(QVector3D(0, 3 * belt_top_height / 2.0 + 0.01 - belt_depth/2.0 + belt_width/2.0  - (belt_width/2.0 + belt_depth) / 2.0 ,  - belt_depth - benches_depth /2.0 +  + 0.01));
-    s.rotate(-80, QVector3D(1, 0, 0));
 
     RectEllipseTorus ell(g, belt_width, belt_width + belt_depth, ell_depth, numSectors);
     ell.translate(QVector3D(0, belt_top_height, - body_depth / 2.0 - belt_depth ));
@@ -651,10 +647,27 @@ TopBelt::TopBelt(Geometry *g)
     ell2.rotate(90, QVector3D(1, 0, 0));
 
 
-    parts << top.parts << end.parts << ls.parts << rs.parts << ts.parts << s.parts
+    parts << top.parts << end.parts
              << ell.parts << ell2.parts
              ;
 
+}
+
+
+Clip::Clip(Geometry *g)
+{
+    RectPrism ls(g, belt_depth, belt_width/2.0, 2 * belt_depth);
+    RectPrism rs(g, belt_depth, belt_width/2.0, 2 * belt_depth);
+    RectPrism ts(g, belt_width +  belt_depth, 3 * belt_depth, 2 * belt_depth);
+    ls.translate(QVector3D(- belt_width / 2.0, 3 * belt_top_height / 2.0 + 0.01 - belt_depth/2.0 + belt_width/4.0 ,  - belt_depth - benches_depth /2.0 + 0.003));
+    rs.translate(QVector3D(belt_width / 2.0, 3 * belt_top_height / 2.0 + 0.01 - belt_depth/2.0 + belt_width/4.0 ,  - belt_depth - benches_depth /2.0 + 0.003));
+    ts.translate(QVector3D(0, 3 * belt_top_height / 2.0 + 0.01 - belt_depth/2.0 + belt_width/2.0   ,  - belt_depth - benches_depth /2.0 + 0.003));
+
+    RectSolidCylindre s(g, belt_hole/2.0, belt_width/2.0 + belt_depth, numSectors);
+    s.translate(QVector3D(0, 3 * belt_top_height / 2.0 + 0.01 - belt_depth/2.0 + belt_width/2.0  - (belt_width/2.0 + belt_depth) / 2.0 ,  - belt_depth - benches_depth /2.0 +  + 0.01));
+    s.rotate(-80, QVector3D(1, 0, 0));
+
+    parts << ls.parts << rs.parts << ts.parts << s.parts;
 }
 
 RectBeltTorus::RectBeltTorus(Geometry *g)

@@ -64,6 +64,8 @@ public:
     GLushort initv;
 
     GLfloat faceColor[4];
+    GLfloat faceShininess;
+    GLfloat faceSpecular[4];
     QMatrix4x4 mat;
     bool smoothing;
     Geometry *geom;
@@ -109,6 +111,11 @@ public:
 class TopBelt : public Rectoid {
 public:
     TopBelt(Geometry *g);
+};
+
+class Clip : public Rectoid {
+public:
+    Clip(Geometry *g);
 };
 
 class BottomBelt : public Rectoid {

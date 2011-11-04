@@ -15,6 +15,9 @@ public:
 
 private slots:
         void setAnimation();
+        void presentation();
+        void setMirror();
+        void setMode();
 
 protected:
 	void keyPressEvent(QKeyEvent *);
@@ -23,7 +26,6 @@ protected:
 private:
         void createActions();
         void createMenus();
-        void presentation();
 
 	GLWidget *glWidget;
 
@@ -31,11 +33,13 @@ private:
         QAction *normalScreen;
         QAction *animation;
         QAction *setPresentation;
+        QAction *mirror;
         QAction *exitAct;
 
         QMenu *menu;
         QTimer *timer;
         QMenuBar *menubar;
+
 };
 
 #endif // WINDOW_H

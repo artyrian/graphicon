@@ -33,11 +33,17 @@ void Window::createActions()
     normalScreen->setShortcut(tr("W"));
     connect(normalScreen, SIGNAL(triggered()), this, SLOT(showNormal()));
 
-    animation = new QAction("Animation", this);
+    animation = new QAction("Animation [on | off]", this);
+    animation->setShortcut(tr("A"));
     connect(animation, SIGNAL(triggered()), this, SLOT(setAnimation()));
 
-    setPresentation = new QAction("Presentation", this);
+    setPresentation = new QAction("Presentation [on | off]", this);
+    setPresentation->setShortcut((tr("P")));
     connect(setPresentation, SIGNAL(triggered()), this, SLOT(presentation()));
+
+    mirror = new QAction("Mirror: [on | off ]", this);
+    mirror->setShortcut((tr("M")));
+    connect(mirror, SIGNAL(triggered()), this, SLOT(setMirror()));
 
     exitAct = new QAction(tr("Exit"), this);
     exitAct->setShortcut(tr("Esc"));
@@ -46,13 +52,14 @@ void Window::createActions()
 
 void Window::setAnimation()
 {
-    glWidget->isAnimation = !glWidget->isAnimation;
+    glWidget->animation();
 }
 
 void Window::presentation()
 {
-    timer->start(1000);
-    glWidget->presentation();
+    glWidget->rotation();
+
+    setMode();
 }
 
 void Window::createMenus()
@@ -62,11 +69,23 @@ void Window::createMenus()
     menu->addAction(normalScreen);
     menu->addAction(animation);
     menu->addAction(setPresentation);
+    menu->addAction(mirror);
     menu->addAction(exitAct);
 
     menubar->addMenu(menu);
 }
 
+void Window::setMirror()
+{
+    glWidget->showMirror = !glWidget->showMirror;
+    glWidget->updateGL();
+}
+
+void Window::setMode()
+{
+    glWidget->lolMode = !glWidget->lolMode;
+    glWidget->updateGL();
+}
 
 void Window::keyPressEvent(QKeyEvent *e)
 {
@@ -81,6 +100,9 @@ void Window::keyPressEvent(QKeyEvent *e)
         case Qt::Key_W :
             showMaximized();
             show();
+            break;
+        case Qt::Key_Space :
+            glWidget->rotation();
             break;
 	default:
 	    QWidget::keyPressEvent(e);
