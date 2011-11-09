@@ -9,7 +9,7 @@
 QColor silverColor(110,110,110);
 QColor handColor(162, 162, 162);
 
-QColor glassColor(0.1 * 255, 0.3 * 255, 0.2 * 255, 0.1 * 255);
+QColor glassColor(0.1 * 255, 0.3 * 255, 0.2 * 255, 0.3 * 255);
 
 MyWatch::MyWatch(QObject *parent)
     : QObject(parent),
@@ -27,7 +27,7 @@ MyWatch::MyWatch(QObject *parent)
     TextureInit("../textures/back.jpg", 1);
     TextureInit("../textures/belt.jpg", 2);
     TextureInit("../textures/stell.jpg", 3);
-    TextureInit("../textures/1.bmp", 4);
+    TextureInit("../textures/reggi.jpg", 4);
 
     buildGeometryWithoutTextures(geometryWithoutTextures, partsWithoutTextures);
     buildGeometry();
@@ -76,7 +76,7 @@ void MyWatch::TextureInit(const char *path, int i)
 
 void MyWatch::reggi_time()
 {
-    TextureInit("1.bmp", 0);
+    TextureInit("../textures/reggi.jpg", 0);
 }
 
 void MyWatch::buildGeometry()
